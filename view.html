@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2B 회계 현황 뷰어</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0f1117;--bg2:#161822;--bg3:#1e2030;--bg4:#252840;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e8eaf0;--text2:#8b8fa8;--text3:#555870;--accent:#6c8fff;--accent2:#4ecdc4;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--purple:#a78bfa;--mono:'JetBrains Mono',monospace;--sans:'Noto Sans KR',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
+.header-title{font-size:16px;font-weight:700;}
+.header-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.readonly-badge{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:var(--amber);font-size:11px;padding:3px 10px;border-radius:99px;}
+.main{padding:28px 32px;max-width:1400px;margin:0 auto;}
+.section{margin-bottom:32px;}
+.section-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.section-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;}
+
+/* 연도 요약 */
+.year-summary{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px;}
+.year-summary table{width:100%;border-collapse:collapse;font-size:12px;}
+.year-summary th{padding:9px 14px;text-align:right;font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;}
+.year-summary th:first-child{text-align:left;}
+.year-summary td{padding:10px 14px;text-align:right;border-bottom:0.5px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap;}
+.year-summary td:first-child{text-align:left;font-family:var(--sans);font-weight:500;color:var(--text);}
+.year-summary tr:last-child td{border-bottom:none;}
+.ys-badge{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;margin-left:4px;}
+.ys-up{background:rgba(74,222,128,.15);color:#4ade80;}.ys-dn{background:rgba(248,113,113,.12);color:#f87171;}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:1000px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent));}
+.kpi-label{font-size:11px;color:var(--text2);margin-bottom:8px;}
+.kpi-value{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--kpi-color,var(--text));}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:4px;}
+
+/* 차트 */
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.chart-grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.chart-grid-2,.chart-grid-3{grid-template-columns:1fr;}}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.chart-title{font-size:13px;font-weight:500;margin-bottom:16px;color:var(--text);}
+.chart-wrap{position:relative;}
+
+/* 테이블 */
+.table-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.table-header{padding:14px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;display:flex;justify-content:space-between;align-items:center;}
+.tbl-wrap{overflow-x:auto;}
+table.data{width:100%;border-collapse:collapse;font-size:12px;}
+table.data th{padding:9px 12px;text-align:right;font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;}
+table.data th:first-child{text-align:left;}
+table.data td{padding:9px 12px;text-align:right;border-bottom:0.5px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap;}
+table.data td:first-child{text-align:left;font-family:var(--sans);color:var(--text);font-weight:500;}
+table.data tr:last-child td{border-bottom:none;}
+table.data tr:hover td{background:rgba(255,255,255,.02);}
+.pos{color:#4ade80!important;}.neg{color:#f87171!important;}.amb{color:#fbbf24!important;}
+
+/* 사입 비율바 */
+.ratio-wrap{display:flex;height:26px;border-radius:6px;overflow:hidden;margin:8px 0;}
+.ratio-new{background:rgba(108,143,255,.7);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;}
+.ratio-re{background:rgba(78,205,196,.7);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;}
+.badge{display:inline-block;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:500;}
+.badge-blue{background:rgba(108,143,255,.15);color:#6c8fff;}
+.updated{font-size:11px;color:var(--text3);}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="header-title">B2B 회계 현황</div>
+    <div class="header-sub" id="headerSub"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="updated" id="updatedDate"></span>
+    <span class="readonly-badge">읽기전용</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 연도별 요약 -->
+  <div class="section">
+    <div class="section-title">연도별 매출 현황</div>
+    <div class="year-summary" id="yearSummary"></div>
+  </div>
+
+  <!-- KPI -->
+  <div class="section">
+    <div class="section-title">전체 기간 핵심 지표</div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </div>
+
+  <!-- 차트 -->
+  <div class="section">
+    <div class="section-title">월별 추이</div>
+    <div class="chart-grid-3">
+      <div class="chart-card"><div class="chart-title">월별 영업이익</div><div class="chart-wrap" style="height:200px;"><canvas id="chartProfit"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">플랫폼별 매출 비중</div><div class="chart-wrap" style="height:200px;"><canvas id="chartPlatform"></canvas></div></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="chart-card"><div class="chart-title">매출 vs 지출 추이</div><div class="chart-wrap" style="height:200px;"><canvas id="chartRevExp"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">마진율 추이</div><div class="chart-wrap" style="height:200px;"><canvas id="chartMargin"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- 사입 분석 -->
+  <div class="section">
+    <div class="section-title">사입 분석 (신제품 vs 리오더)</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;" id="purchaseKpi"></div>
+    <div class="chart-grid-2">
+      <div class="chart-card"><div class="chart-title">신제품 vs 리오더 사입금액</div><div class="chart-wrap" style="height:200px;"><canvas id="chartPurchase"></canvas></div></div>
+      <div class="chart-card">
+        <div class="chart-title">전체 기간 사입 비율</div>
+        <div style="padding:8px 0;" id="ratioBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 월별 상세 테이블 -->
+  <div class="section">
+    <div class="section-title">월별 상세 내역</div>
+    <div class="table-card">
+      <div class="table-header"><span>월별 마감 보고서</span><span class="badge badge-blue" id="tableCount"></span></div>
+      <div class="tbl-wrap">
+        <table class="data">
+          <thead><tr><th>연월</th><th>매출합계</th><th>오너클랜</th><th>도매꾹</th><th>쿠팡</th><th>지출-1</th><th>지출-2(사입)</th><th>영업이익</th><th>마진율</th><th>실재고</th><th>상품마진율</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ACC=[{"month": "2022-12", "totalRevenue": 348100, "ownerclan": 348100, "domekku": 0, "coupang": 0, "totalExp1": 4076740, "purchase": 2858760, "operatingProfit": -3935533, "marginRate": -1902.2, "stock": 2651867, "stockRate": 1281.8, "productMarginRate": 46.2, "deliveryIncludeMarginRate": 51.2}, {"month": "2023-01", "totalRevenue": 1839700, "ownerclan": 1839700, "domekku": 0, "coupang": 0, "totalExp1": 8048613, "purchase": 11300840, "operatingProfit": -7172657, "marginRate": -744.3, "stock": 10337096, "stockRate": 1072.6, "productMarginRate": 46.2, "deliveryIncludeMarginRate": 57.4}, {"month": "2023-02", "totalRevenue": 4110000, "ownerclan": 4110000, "domekku": 0, "coupang": 0, "totalExp1": 8257159, "purchase": 12134260, "operatingProfit": -6358584, "marginRate": -287.5, "stock": 9922835, "stockRate": 448.7, "productMarginRate": 51.1, "deliveryIncludeMarginRate": 58.4}, {"month": "2023-03", "totalRevenue": 7367000, "ownerclan": 7367000, "domekku": 0, "coupang": 0, "totalExp1": 8326695, "purchase": 24169330, "operatingProfit": -5033514, "marginRate": -123.6, "stock": 20095511, "stockRate": 493.3, "productMarginRate": 47.9, "deliveryIncludeMarginRate": 55.9}, {"month": "2023-04", "totalRevenue": 12414300, "ownerclan": 12414300, "domekku": 0, "coupang": 0, "totalExp1": 16395285, "purchase": 28559660, "operatingProfit": -11406436, "marginRate": -153.6, "stock": 21134209, "stockRate": 284.6, "productMarginRate": 45.0, "deliveryIncludeMarginRate": 52.1}, {"month": "2023-05", "totalRevenue": 21782500, "ownerclan": 21782500, "domekku": 0, "coupang": 0, "totalExp1": 15755955, "purchase": 24968340, "operatingProfit": -6430502, "marginRate": -51.6, "stock": 12511293, "stockRate": 100.4, "productMarginRate": 43.2, "deliveryIncludeMarginRate": 49.6}, {"month": "2023-06", "totalRevenue": 28662000, "ownerclan": 28662000, "domekku": 0, "coupang": 0, "totalExp1": 17326971, "purchase": 57680910, "operatingProfit": -5330815, "marginRate": -32.0, "stock": 41015066, "stockRate": 246.1, "productMarginRate": 42.9, "deliveryIncludeMarginRate": 49.7}, {"month": "2023-07", "totalRevenue": 41209900, "ownerclan": 41209900, "domekku": 0, "coupang": 0, "totalExp1": 17393260, "purchase": 42624550, "operatingProfit": 383532, "marginRate": 1.6, "stock": 19191442, "stockRate": 81.9, "productMarginRate": 43.8, "deliveryIncludeMarginRate": 51.8}, {"month": "2023-08", "totalRevenue": 47224800, "ownerclan": 47224800, "domekku": 0, "coupang": 0, "totalExp1": 17088685, "purchase": 49849860, "operatingProfit": 3290631, "marginRate": 12.3, "stock": 23004376, "stockRate": 85.7, "productMarginRate": 44.7, "deliveryIncludeMarginRate": 52.7}, {"month": "2023-09", "totalRevenue": 43680350, "ownerclan": 43680350, "domekku": 0, "coupang": 0, "totalExp1": 16359057, "purchase": 35054580, "operatingProfit": 2192686, "marginRate": 8.7, "stock": 9925973, "stockRate": 39.5, "productMarginRate": 44.3, "deliveryIncludeMarginRate": 53.1}, {"month": "2023-10", "totalRevenue": 58296905, "ownerclan": 58296905, "domekku": 0, "coupang": 0, "totalExp1": 25500785, "purchase": 66385230, "operatingProfit": -681841, "marginRate": -2.0, "stock": 32907269, "stockRate": 98.3, "productMarginRate": 44.1, "deliveryIncludeMarginRate": 51.3}, {"month": "2023-11", "totalRevenue": 75561900, "ownerclan": 75561900, "domekku": 0, "coupang": 0, "totalExp1": 25134540, "purchase": 55207730, "operatingProfit": 6266848, "marginRate": 14.2, "stock": 11047218, "stockRate": 25.0, "productMarginRate": 44.0, "deliveryIncludeMarginRate": 50.7}, {"month": "2023-12", "totalRevenue": 82866689, "ownerclan": 82860275, "domekku": 0, "coupang": 0, "totalExp1": 37141976, "purchase": 73104776, "operatingProfit": -3081724, "marginRate": -6.3, "stock": 24298339, "stockRate": 49.8, "productMarginRate": 43.6, "deliveryIncludeMarginRate": 49.7}, {"month": "2024-01", "totalRevenue": 66201838, "ownerclan": 65095950, "domekku": 0, "coupang": 0, "totalExp1": 37251498, "purchase": 85300719, "operatingProfit": -7218651, "marginRate": -20.0, "stock": 49131728, "stockRate": 135.8, "productMarginRate": 46.4, "deliveryIncludeMarginRate": 54.4}, {"month": "2024-02", "totalRevenue": 55197861, "ownerclan": 55191158, "domekku": 0, "coupang": 0, "totalExp1": 28007880, "purchase": 24396500, "operatingProfit": -3431374, "marginRate": -11.2, "stock": -6224855, "stockRate": -20.3, "productMarginRate": 46.4, "deliveryIncludeMarginRate": 54.7}, {"month": "2024-03", "totalRevenue": 68795467, "ownerclan": 68747512, "domekku": 0, "coupang": 47955, "totalExp1": 29705420, "purchase": 4425260, "operatingProfit": -1399727, "marginRate": -3.5, "stock": -36064514, "stockRate": -89.1, "productMarginRate": 46.0, "deliveryIncludeMarginRate": 52.7}, {"month": "2024-04", "totalRevenue": 75005001, "ownerclan": 74841960, "domekku": 0, "coupang": 163041, "totalExp1": 32359489, "purchase": 53281134, "operatingProfit": 1837283, "marginRate": 4.5, "stock": 12472906, "stockRate": 30.6, "productMarginRate": 47.4, "deliveryIncludeMarginRate": 55.5}, {"month": "2024-05", "totalRevenue": 75327356, "ownerclan": 75313839, "domekku": 0, "coupang": 13517, "totalExp1": 32828688, "purchase": 46119384, "operatingProfit": 1316021, "marginRate": 3.2, "stock": 4936738, "stockRate": 12.0, "productMarginRate": 46.5, "deliveryIncludeMarginRate": 54.4}, {"month": "2024-06", "totalRevenue": 71699756, "ownerclan": 71645288, "domekku": 0, "coupang": 54468, "totalExp1": 31341308, "purchase": 50721187, "operatingProfit": -479870, "marginRate": -1.2, "stock": 9882869, "stockRate": 24.2, "productMarginRate": 46.0, "deliveryIncludeMarginRate": 53.1}, {"month": "2024-07", "totalRevenue": 75758114, "ownerclan": 74511005, "domekku": 0, "coupang": 48199, "totalExp1": 33417836, "purchase": 107394724, "operatingProfit": 1919619, "marginRate": 4.8, "stock": 66974066, "stockRate": 165.7, "productMarginRate": 46.5, "deliveryIncludeMarginRate": 54.1}, {"month": "2024-08", "totalRevenue": 73940578, "ownerclan": 73737617, "domekku": 0, "coupang": 145161, "totalExp1": 35480976, "purchase": 53792460, "operatingProfit": -2935670, "marginRate": -7.1, "stock": 12397188, "stockRate": 29.9, "productMarginRate": 46.3, "deliveryIncludeMarginRate": 53.3}, {"month": "2024-09", "totalRevenue": 69761815, "ownerclan": 69548869, "domekku": 9990, "coupang": 202956, "totalExp1": 30806850, "purchase": 48224065, "operatingProfit": 596072, "marginRate": 1.6, "stock": 9865173, "stockRate": 25.7, "productMarginRate": 47.1, "deliveryIncludeMarginRate": 54.6}, {"month": "2024-10", "totalRevenue": 83068460, "ownerclan": 82377436, "domekku": 293370, "coupang": 397654, "totalExp1": 42305441, "purchase": 17122203, "operatingProfit": -6139911, "marginRate": -13.1, "stock": -29780727, "stockRate": -63.5, "productMarginRate": 47.5, "deliveryIncludeMarginRate": 54.5}, {"month": "2024-11", "totalRevenue": 98768685, "ownerclan": 98059673, "domekku": 558870, "coupang": 150142, "totalExp1": 43644186, "purchase": 74260427, "operatingProfit": -1224533, "marginRate": -2.2, "stock": 17911395, "stockRate": 31.8, "productMarginRate": 50.2, "deliveryIncludeMarginRate": 55.7}, {"month": "2024-12", "totalRevenue": 109167985, "ownerclan": 106521236, "domekku": 1400100, "coupang": 271732, "totalExp1": 47577282, "purchase": 62302129, "operatingProfit": -1337440, "marginRate": -2.1, "stock": -626014, "stockRate": -1.0, "productMarginRate": 44.5, "deliveryIncludeMarginRate": 50.1}, {"month": "2025-01", "totalRevenue": 73732850, "ownerclan": 72461681, "domekku": 1094050, "coupang": 109804, "totalExp1": 36155646, "purchase": 77768191, "operatingProfit": -2286727, "marginRate": -5.7, "stock": 37904260, "stockRate": 96.3, "productMarginRate": 47.0, "deliveryIncludeMarginRate": 54.8}, {"month": "2025-02", "totalRevenue": 80318531, "ownerclan": 78869322, "domekku": 1283878, "coupang": 144101, "totalExp1": 36808084, "purchase": 42014255, "operatingProfit": -696852, "marginRate": -1.6, "stock": -2193044, "stockRate": -5.1, "productMarginRate": 46.9, "deliveryIncludeMarginRate": 55.0}, {"month": "2025-03", "totalRevenue": 99288151, "ownerclan": 96118548, "domekku": 2981100, "coupang": 127021, "totalExp1": 38248745, "purchase": 43946793, "operatingProfit": 5622358, "marginRate": 10.2, "stock": -11470254, "stockRate": -21.6, "productMarginRate": 47.5, "deliveryIncludeMarginRate": 55.8}, {"month": "2025-04", "totalRevenue": 110733243, "ownerclan": 105108713, "domekku": 5545929, "coupang": 0, "totalExp1": 50068232, "purchase": 74482643, "operatingProfit": 478469, "marginRate": 0.8, "stock": 14296102, "stockRate": 25.1, "productMarginRate": 48.7, "deliveryIncludeMarginRate": 56.1}, {"month": "2025-05", "totalRevenue": 101985608, "ownerclan": 97355360, "domekku": 4509715, "coupang": 0, "totalExp1": 47601119, "purchase": 67712425, "operatingProfit": -1187974, "marginRate": -2.1, "stock": 12139962, "stockRate": 22.9, "productMarginRate": 47.7, "deliveryIncludeMarginRate": 55.7}, {"month": "2025-06", "totalRevenue": 113203843, "ownerclan": 107898547, "domekku": 5064582, "coupang": 0, "totalExp1": 46347950, "purchase": 77385359, "operatingProfit": 5254625, "marginRate": 8.5, "stock": 15784092, "stockRate": 26.8, "productMarginRate": 47.5, "deliveryIncludeMarginRate": 55.4}, {"month": "2025-07", "totalRevenue": 126996586, "ownerclan": 117748698, "domekku": 8638501, "coupang": 811920, "totalExp1": 47541317, "purchase": 73039506, "operatingProfit": 10092238, "marginRate": 14.5, "stock": 3676476, "stockRate": 5.7, "productMarginRate": 48.8, "deliveryIncludeMarginRate": 56.8}, {"month": "2025-08", "totalRevenue": 118285445, "ownerclan": 102231102, "domekku": 9223004, "coupang": 6858080, "totalExp1": 47089256, "purchase": 85988948, "operatingProfit": 5153424, "marginRate": 7.8, "stock": 19946184, "stockRate": 34.5, "productMarginRate": 49.8, "deliveryIncludeMarginRate": 56.5}, {"month": "2025-09", "totalRevenue": 147246222, "ownerclan": 122501379, "domekku": 12451401, "coupang": 12408290, "totalExp1": 55670919, "purchase": 58430673, "operatingProfit": 12321028, "marginRate": 15.6, "stock": -20823601, "stockRate": -31.3, "productMarginRate": 49.6, "deliveryIncludeMarginRate": 55.2}, {"month": "2025-10", "totalRevenue": 130716641, "ownerclan": 103472464, "domekku": 11722317, "coupang": 15521860, "totalExp1": 54449987, "purchase": 60100134, "operatingProfit": 6263682, "marginRate": 8.9, "stock": -9902838, "stockRate": -17.5, "productMarginRate": 50.3, "deliveryIncludeMarginRate": 55.6}, {"month": "2025-11", "totalRevenue": 141315909, "ownerclan": 117601839, "domekku": 9801620, "coupang": 13912450, "totalExp1": 53757319, "purchase": 86787779, "operatingProfit": 8331873, "marginRate": 10.5, "stock": 7561062, "stockRate": 11.3, "productMarginRate": 48.8, "deliveryIncludeMarginRate": 52.4}, {"month": "2025-12", "totalRevenue": 175256219, "ownerclan": 149903817, "domekku": 10669832, "coupang": 14682570, "totalExp1": 66415294, "purchase": 66651777, "operatingProfit": 14733455, "marginRate": 15.7, "stock": -27455693, "stockRate": -33.4, "productMarginRate": 48.6, "deliveryIncludeMarginRate": 54.2}];
+const PUR=[{"month": "2022-12", "newPurchaseAmt": 2837792, "newPurchaseSku": 169, "reorderAmt": 0, "reorderSku": 0}, {"month": "2023-01", "newPurchaseAmt": 7820007, "newPurchaseSku": 422, "reorderAmt": 3479385, "reorderSku": 94}, {"month": "2023-02", "newPurchaseAmt": 7581234, "newPurchaseSku": 292, "reorderAmt": 4418163, "reorderSku": 71}, {"month": "2023-03", "newPurchaseAmt": 13632714, "newPurchaseSku": 543, "reorderAmt": 12620046, "reorderSku": 316}, {"month": "2023-04", "newPurchaseAmt": 7931414, "newPurchaseSku": 348, "reorderAmt": 18654115, "reorderSku": 350}, {"month": "2023-05", "newPurchaseAmt": 12534221, "newPurchaseSku": 628, "reorderAmt": 17082076, "reorderSku": 352}, {"month": "2023-06", "newPurchaseAmt": 8618607, "newPurchaseSku": 484, "reorderAmt": 44353497, "reorderSku": 705}, {"month": "2023-07", "newPurchaseAmt": 5350588, "newPurchaseSku": 252, "reorderAmt": 37209756, "reorderSku": 640}, {"month": "2023-08", "newPurchaseAmt": 3833727, "newPurchaseSku": 222, "reorderAmt": 47944010, "reorderSku": 805}, {"month": "2023-09", "newPurchaseAmt": 4295606, "newPurchaseSku": 203, "reorderAmt": 48535731, "reorderSku": 774}, {"month": "2023-10", "newPurchaseAmt": 2975251, "newPurchaseSku": 174, "reorderAmt": 58918485, "reorderSku": 950}, {"month": "2023-11", "newPurchaseAmt": 4384866, "newPurchaseSku": 175, "reorderAmt": 47468968, "reorderSku": 652}, {"month": "2023-12", "newPurchaseAmt": 3290094, "newPurchaseSku": 178, "reorderAmt": 109947386, "reorderSku": 1154}, {"month": "2024-01", "newPurchaseAmt": 1147296, "newPurchaseSku": 58, "reorderAmt": 48503630, "reorderSku": 560}, {"month": "2024-02", "newPurchaseAmt": 1089458, "newPurchaseSku": 46, "reorderAmt": 7032431, "reorderSku": 110}, {"month": "2024-03", "newPurchaseAmt": 4341392, "newPurchaseSku": 302, "reorderAmt": 38977579, "reorderSku": 618}, {"month": "2024-04", "newPurchaseAmt": 4938365, "newPurchaseSku": 280, "reorderAmt": 49295214, "reorderSku": 860}, {"month": "2024-05", "newPurchaseAmt": 1390769, "newPurchaseSku": 45, "reorderAmt": 56549104, "reorderSku": 891}, {"month": "2024-06", "newPurchaseAmt": 2959241, "newPurchaseSku": 174, "reorderAmt": 41674945, "reorderSku": 724}, {"month": "2024-07", "newPurchaseAmt": 6752645, "newPurchaseSku": 395, "reorderAmt": 74438099, "reorderSku": 1178}, {"month": "2024-08", "newPurchaseAmt": 2294714, "newPurchaseSku": 70, "reorderAmt": 39436699, "reorderSku": 589}, {"month": "2024-09", "newPurchaseAmt": 4254971, "newPurchaseSku": 241, "reorderAmt": 49030684, "reorderSku": 711}, {"month": "2024-10", "newPurchaseAmt": 20118, "newPurchaseSku": 1, "reorderAmt": 58875754, "reorderSku": 793}, {"month": "2024-11", "newPurchaseAmt": 7108396, "newPurchaseSku": 361, "reorderAmt": 66232142, "reorderSku": 674}, {"month": "2024-12", "newPurchaseAmt": 6318351, "newPurchaseSku": 260, "reorderAmt": 73069718, "reorderSku": 748}, {"month": "2025-01", "newPurchaseAmt": 3595966, "newPurchaseSku": 131, "reorderAmt": 40834060, "reorderSku": 467}, {"month": "2025-02", "newPurchaseAmt": 1471742, "newPurchaseSku": 90, "reorderAmt": 11049682, "reorderSku": 441}, {"month": "2025-03", "newPurchaseAmt": 4336710, "newPurchaseSku": 233, "reorderAmt": 14405, "reorderSku": 805}, {"month": "2025-04", "newPurchaseAmt": 3325853, "newPurchaseSku": 152, "reorderAmt": 13978, "reorderSku": 762}, {"month": "2025-05", "newPurchaseAmt": 465688, "newPurchaseSku": 23, "reorderAmt": 11360, "reorderSku": 640}, {"month": "2025-06", "newPurchaseAmt": 307437, "newPurchaseSku": 14, "reorderAmt": 20498, "reorderSku": 1077}, {"month": "2025-07", "newPurchaseAmt": 1812362, "newPurchaseSku": 118, "reorderAmt": 20643, "reorderSku": 854}, {"month": "2025-08", "newPurchaseAmt": 1938831, "newPurchaseSku": 105, "reorderAmt": 12338, "reorderSku": 570}, {"month": "2025-09", "newPurchaseAmt": 2167710, "newPurchaseSku": 150, "reorderAmt": 11550, "reorderSku": 639}, {"month": "2025-10", "newPurchaseAmt": 1188291, "newPurchaseSku": 111, "reorderAmt": 13380, "reorderSku": 714}, {"month": "2025-11", "newPurchaseAmt": 818076, "newPurchaseSku": 56, "reorderAmt": 15778, "reorderSku": 878}, {"month": "2025-12", "newPurchaseAmt": 1363565, "newPurchaseSku": 105, "reorderAmt": 23135, "reorderSku": 1368}, {"month": "2026-01", "newPurchaseAmt": 505848, "newPurchaseSku": 48, "reorderAmt": 15626, "reorderSku": 1060}, {"month": "2026-02", "newPurchaseAmt": 632383, "newPurchaseSku": 36, "reorderAmt": 12716, "reorderSku": 713}];
+
+const C={blue:'#6c8fff',teal:'#4ecdc4',green:'#4ade80',red:'#f87171',amber:'#fbbf24',purple:'#a78bfa'};
+const charts={};
+
+function fmt(n){if(n==null||isNaN(n))return'-';return Math.round(n).toLocaleString('ko-KR');}
+function fmtM(n){if(n==null||isNaN(n))return'-';const a=Math.abs(n),s=n<0?'-':'';if(a>=1e8)return s+(a/1e8).toFixed(1)+'억';if(a>=1e4)return s+(a/1e4).toFixed(0)+'만';return s+a.toLocaleString();}
+function fmtP(n){if(n==null||isNaN(n))return'-';return n.toFixed(1)+'%';}
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function mc(id,cfg){
+  dc(id);const ctx=document.getElementById(id);if(!ctx)return;
+  charts[id]=new Chart(ctx,{...cfg,options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2030',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#8b8fa8',bodyColor:'#e8eaf0'}},
+    ...(cfg.type==='doughnut'?{}:{scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}}}}),
+    ...cfg.options}});
+}
+
+function init(){
+  const data=ACC.sort((a,b)=>a.month.localeCompare(b.month));
+  const years=[...new Set(data.map(r=>r.month.slice(0,4)))].sort();
+
+  document.getElementById('headerSub').textContent=data[0].month+' ~ '+data[data.length-1].month+' ('+data.length+'개월)';
+  document.getElementById('updatedDate').textContent='업데이트: 2026-04-15';
+  document.getElementById('tableCount').textContent=data.length+'건';
+
+  // ── 연도별 요약 ──
+  const yData=years.map(y=>{
+    const yd=data.filter(r=>r.month.startsWith(y));
+    return{year:y,months:yd.length,
+      tot:yd.reduce((s,r)=>s+(r.totalRevenue||0),0),
+      oc:yd.reduce((s,r)=>s+(r.ownerclan||0),0),
+      dk:yd.reduce((s,r)=>s+(r.domekku||0),0),
+      cp:yd.reduce((s,r)=>s+(r.coupang||0),0),
+    };
+  });
+  function yoyB(cur,prev,prevMonths){
+    if(!prev||prevMonths<12)return '';
+    const p=(cur-prev)/prev*100;
+    return`<span class="ys-badge ${p>=0?'ys-up':'ys-dn'}">${p>=0?'+':''}${p.toFixed(0)}%</span>`;
+  }
+  function sh(v,t){return t>0?`<span style="font-size:10px;color:var(--text3);margin-left:2px;">${(v/t*100).toFixed(0)}%</span>`:''}
+  document.getElementById('yearSummary').innerHTML=`<table>
+    <thead><tr><th>연도</th><th>전체 매출</th><th style="color:#6c8fff;">오너클랜</th><th style="color:#4ecdc4;">도매꾹</th><th style="color:#fbbf24;">쿠팡</th></tr></thead>
+    <tbody>${yData.map((d,i)=>{
+      const prev=i>0?yData[i-1]:null;
+      return`<tr>
+        <td>${d.year}년 <span style="font-size:10px;color:var(--text3);">${d.months}개월</span></td>
+        <td style="color:var(--text);font-weight:500;">${fmtM(d.tot)}원 ${yoyB(d.tot,prev?.tot,prev?.months)}</td>
+        <td style="color:#6c8fff;">${fmtM(d.oc)}원${sh(d.oc,d.tot)} ${yoyB(d.oc,prev?.oc,prev?.months)}</td>
+        <td style="color:#4ecdc4;">${fmtM(d.dk)}원${sh(d.dk,d.tot)} ${yoyB(d.dk,prev?.dk,prev?.months)}</td>
+        <td style="color:#fbbf24;">${fmtM(d.cp)}원${sh(d.cp,d.tot)} ${yoyB(d.cp,prev?.cp,prev?.months)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+
+  // ── KPI ──
+  const totRev=data.reduce((s,r)=>s+(r.totalRevenue||0),0);
+  const totExp1=data.reduce((s,r)=>s+(r.totalExp1||0),0);
+  const totExp2=data.reduce((s,r)=>s+(r.purchase||0),0);
+  const totProfit=data.reduce((s,r)=>s+(r.operatingProfit||0),0);
+  const avgMargin=data.reduce((s,r)=>s+(r.marginRate||0),0)/data.length;
+  const lastStock=data[data.length-1]?.stock||0;
+  document.getElementById('kpiGrid').innerHTML=[
+    {label:'총 매출',val:fmtM(totRev)+'원',color:C.blue},
+    {label:'운영 지출-1',val:fmtM(totExp1)+'원',color:C.red},
+    {label:'사입 지출-2',val:fmtM(totExp2)+'원',color:C.amber},
+    {label:'영업이익',val:fmtM(totProfit)+'원',color:totProfit>=0?C.green:C.red},
+    {label:'평균 마진율',val:fmtP(avgMargin),color:avgMargin>=0?C.teal:C.red},
+    {label:'최근 실재고',val:fmtM(lastStock)+'원',color:C.purple},
+  ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div></div>`).join('');
+
+  // ── 차트 ──
+  const labels=data.map(r=>r.month.slice(2));
+  const profits=data.map(r=>r.operatingProfit||0);
+  mc('chartProfit',{type:'bar',data:{labels,datasets:[{data:profits,backgroundColor:profits.map(v=>v>=0?'rgba(74,222,128,.5)':'rgba(248,113,113,.5)'),borderColor:profits.map(v=>v>=0?C.green:C.red),borderWidth:1,borderRadius:3}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+
+  const ocT=data.reduce((s,r)=>s+(r.ownerclan||0),0),dkT=data.reduce((s,r)=>s+(r.domekku||0),0),cpT=data.reduce((s,r)=>s+(r.coupang||0),0);
+  mc('chartPlatform',{type:'doughnut',data:{labels:['오너클랜','도매꾹','쿠팡'],datasets:[{data:[ocT,dkT,cpT],backgroundColor:['#6c8fff','#4ecdc4','#fbbf24'],borderWidth:0}]},options:{cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{color:'#8b8fa8',font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:ctx=>' '+(totRev>0?(ctx.raw/totRev*100).toFixed(1):0)+'% · '+fmtM(ctx.raw)+'원'}}}}});
+
+  mc('chartRevExp',{type:'line',data:{labels,datasets:[
+    {label:'매출',data:data.map(r=>r.totalRevenue||0),borderColor:C.blue,backgroundColor:'rgba(108,143,255,.1)',fill:true,tension:.3,pointRadius:2,borderWidth:2},
+    {label:'지출-1',data:data.map(r=>r.totalExp1||0),borderColor:C.red,backgroundColor:'rgba(248,113,113,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2},
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+
+  mc('chartMargin',{type:'line',data:{labels,datasets:[
+    {label:'마진율',data:data.map(r=>r.marginRate||0),borderColor:C.teal,tension:.3,pointRadius:2,borderWidth:2,fill:false},
+    {label:'배송포함',data:data.map(r=>r.deliveryIncludeMarginRate||0),borderColor:C.purple,tension:.3,pointRadius:2,borderWidth:2,fill:false,borderDash:[4,2]},
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(1)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(0)+'%'}}}}});
+
+  // ── 사입 분석 ──
+  const pur=PUR.sort((a,b)=>a.month.localeCompare(b.month));
+  const totNA=pur.reduce((s,r)=>s+(r.newPurchaseAmt||0),0);
+  const totNS=pur.reduce((s,r)=>s+(r.newPurchaseSku||0),0);
+  const totRA=pur.reduce((s,r)=>s+(r.reorderAmt||0),0);
+  const totRS=pur.reduce((s,r)=>s+(r.reorderSku||0),0);
+  const totA=totNA+totRA,totS=totNS+totRS;
+  const nPct=totA>0?totNA/totA*100:0,rPct=totA>0?totRA/totA*100:0;
+  const nSPct=totS>0?totNS/totS*100:0,rSPct=totS>0?totRS/totS*100:0;
+  const avgNU=totNS>0?Math.round(totNA/totNS):0,avgRU=totRS>0?Math.round(totRA/totRS):0;
+
+  document.getElementById('purchaseKpi').innerHTML=[
+    {label:'신제품 사입금액',val:fmtM(totNA)+'원',sub:`비율 ${nPct.toFixed(1)}% / SKU ${totNS.toLocaleString()}건`,color:C.blue},
+    {label:'리오더 사입금액',val:fmtM(totRA)+'원',sub:`비율 ${rPct.toFixed(1)}% / SKU ${totRS.toLocaleString()}건`,color:C.teal},
+    {label:'신제품 평균단가',val:fmtM(avgNU)+'원',sub:'1SKU당 평균',color:C.blue},
+    {label:'리오더 평균단가',val:fmtM(avgRU)+'원',sub:'1SKU당 평균',color:C.teal},
+  ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  const purLabels=pur.map(r=>r.month.slice(2));
+  mc('chartPurchase',{type:'bar',data:{labels:purLabels,datasets:[
+    {label:'신제품',data:pur.map(r=>r.newPurchaseAmt||0),backgroundColor:'rgba(108,143,255,.6)',borderRadius:2},
+    {label:'리오더',data:pur.map(r=>r.reorderAmt||0),backgroundColor:'rgba(78,205,196,.6)',borderRadius:2},
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+
+  document.getElementById('ratioBars').innerHTML=`
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">금액 기준</div>
+    <div class="ratio-wrap"><div class="ratio-new" style="width:${Math.max(nPct,4)}%">${nPct.toFixed(1)}%</div><div class="ratio-re" style="width:${Math.max(rPct,4)}%">${rPct.toFixed(1)}%</div></div>
+    <div style="display:flex;gap:16px;font-size:11px;color:var(--text2);margin-top:4px;margin-bottom:12px;">
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(108,143,255,.7);margin-right:4px;"></span>신제품</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(78,205,196,.7);margin-right:4px;"></span>리오더</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">SKU 수 기준</div>
+    <div class="ratio-wrap" style="height:20px;"><div class="ratio-new" style="width:${Math.max(nSPct,4)}%;font-size:10px;">${nSPct.toFixed(1)}%</div><div class="ratio-re" style="width:${Math.max(rSPct,4)}%;font-size:10px;">${rSPct.toFixed(1)}%</div></div>`;
+
+  // ── 월별 테이블 ──
+  document.getElementById('tableBody').innerHTML=[...data].reverse().map(r=>{
+    const pf=r.operatingProfit||0,mg=r.marginRate;
+    return`<tr>
+      <td>${r.month}</td>
+      <td>${fmt(r.totalRevenue)}</td>
+      <td style="color:#6c8fff;">${fmt(r.ownerclan)}</td>
+      <td style="color:#4ecdc4;">${fmt(r.domekku)}</td>
+      <td style="color:#fbbf24;">${fmt(r.coupang)}</td>
+      <td>${fmt(r.totalExp1)}</td>
+      <td>${fmt(r.purchase)}</td>
+      <td class="${pf>=0?'pos':'neg'}">${fmt(pf)}</td>
+      <td class="${mg!=null?(mg>=0?'pos':'neg'):''}"> ${fmtP(mg)}</td>
+      <td>${fmt(r.stock)}</td>
+      <td>${fmtP(r.productMarginRate)}</td>
+    </tr>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>
