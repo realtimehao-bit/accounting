@@ -117,6 +117,21 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 .del-btn{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;transition:all .15s;}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,.1);}
 .year-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.year-summary{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;}
+.year-summary table{width:100%;border-collapse:collapse;font-size:12px;}
+.year-summary th{padding:8px 12px;text-align:right;font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;}
+.year-summary th:first-child{text-align:left;}
+.year-summary td{padding:9px 12px;text-align:right;border-bottom:0.5px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap;}
+.year-summary td:first-child{text-align:left;font-family:var(--sans);font-weight:500;color:var(--text);font-size:12px;}
+.year-summary tr:last-child td{border-bottom:none;}
+.year-summary tr:hover td{background:rgba(255,255,255,.02);}
+.year-summary .total-col{color:var(--text)!important;font-weight:500;}
+.year-summary .oc-col{color:#6c8fff!important;}
+.year-summary .dk-col{color:#4ecdc4!important;}
+.year-summary .cp-col{color:#fbbf24!important;}
+.ys-badge{display:inline-block;font-size:10px;font-weight:500;padding:1px 5px;border-radius:4px;margin-left:4px;}
+.ys-up{background:rgba(74,222,128,.15);color:#4ade80;}
+.ys-dn{background:rgba(248,113,113,.12);color:#f87171;}
 .ytab{padding:4px 12px;border-radius:99px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--sans);transition:all .15s;}
 .ytab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .yoy-badge{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;}
@@ -162,7 +177,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 .re-pct{color:var(--accent2)!important;}
 
 /* 검색결과 KPI */
-.search-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}@media(max-width:900px){.search-kpi{grid-template-columns:repeat(2,1fr);}}
+.search-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}@media(max-width:1100px){.search-kpi{grid-template-columns:repeat(2,1fr);}}
 .skpi{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;}
 .skpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--skpi-color,var(--accent));}
 .skpi-label{font-size:10px;color:var(--text3);margin-bottom:5px;}
@@ -213,6 +228,8 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
       <button class="btn success" onclick="exportCSV()">↓ CSV</button>
     </div>
   </div>
+  <div class="year-summary" id="yearSummary" style="display:none;"></div>
+<div class="year-summary" id="yearSummary" style="display:none;"></div>
   <div class="kpi-grid" id="kpiGrid"></div>
   <div class="chart-grid chart-grid-3" style="margin-bottom:16px;">
     <div class="chart-card"><div class="chart-title">월별 영업이익 추이 <span class="chart-badge" id="profitBadge"></span></div><div class="chart-wrap" style="height:200px;"><canvas id="chartProfit"></canvas></div></div>
@@ -296,20 +313,14 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
   <!-- 비율 막대 -->
   <div class="chart-card" style="margin-bottom:16px;">
     <div class="chart-title">사입 금액 비율 <span class="chart-badge" id="ratioRangeBadge"></span></div>
-    <div class="ratio-wrap" id="ratioBar">
-      <div class="ratio-new" style="width:50%">신제품 50%</div>
-      <div class="ratio-re" style="width:50%">리오더 50%</div>
-    </div>
+    <div class="ratio-wrap" id="ratioBar"></div>
     <div class="ratio-legend">
       <span><span class="ratio-dot" style="background:rgba(108,143,255,.7);"></span>신제품 사입</span>
       <span><span class="ratio-dot" style="background:rgba(78,205,196,.7);"></span>리오더 사입</span>
     </div>
     <div style="margin-top:12px;">
       <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">SKU 수 기준 비율</div>
-      <div class="ratio-wrap" id="ratioBarSku" style="height:20px;">
-        <div class="ratio-new" style="width:50%;font-size:10px;">신제품 50%</div>
-        <div class="ratio-re" style="width:50%;font-size:10px;">리오더 50%</div>
-      </div>
+      <div class="ratio-wrap" id="ratioBarSku" style="height:20px;"></div>
     </div>
   </div>
 
@@ -611,6 +622,54 @@ function renderDashboard(){
   const totProfit=data.reduce((s,r)=>s+(r.operatingProfit||0),0);
   const avgMargin=data.reduce((s,r)=>s+(r.marginRate||0),0)/data.length;
   document.getElementById('dashPeriod').textContent=data[0].month+' ~ '+data[data.length-1].month+' ('+data.length+'개월)';
+
+  // ── 연도별 요약 테이블 ──
+  const allYears=[...new Set(raw.map(r=>r.month.slice(0,4)))].sort();
+  const ysEl=document.getElementById('yearSummary');
+  if(allYears.length>0){
+    ysEl.style.display='block';
+    const yData=allYears.map(y=>{
+      const yd=raw.filter(r=>r.month.startsWith(y));
+      const tot=yd.reduce((s,r)=>s+(r.totalRevenue||0),0);
+      const oc=yd.reduce((s,r)=>s+(r.ownerclan||0),0);
+      const dk=yd.reduce((s,r)=>s+(r.domekku||0),0);
+      const cp=yd.reduce((s,r)=>s+((r.coupangIt||0)+(r.coupangGlobal||0)+(r.coupangEtc||0)),0);
+      return{year:y,tot,oc,dk,cp};
+    });
+    function yoyBadgeSmall(cur,prev){
+      if(!prev||prev===0)return '';
+      const pct=(cur-prev)/prev*100;
+      const cls=pct>=0?'ys-up':'ys-dn';
+      return`<span class="ys-badge ${cls}">${pct>=0?'+':''}${pct.toFixed(0)}%</span>`;
+    }
+    function shareBadge(val,tot){
+      if(!tot)return '';
+      return`<span style="font-size:10px;color:var(--text3);margin-left:3px;">${(val/tot*100).toFixed(0)}%</span>`;
+    }
+    const ysRows=yData.map((d,i)=>{
+      const prev=i>0?yData[i-1]:null;
+      return`<tr>
+        <td>${d.year}년</td>
+        <td class="total-col">${fmtM(d.tot)}원 ${yoyBadgeSmall(d.tot,prev?.tot)}</td>
+        <td class="oc-col">${fmtM(d.oc)}원${shareBadge(d.oc,d.tot)} ${yoyBadgeSmall(d.oc,prev?.oc)}</td>
+        <td class="dk-col">${fmtM(d.dk)}원${shareBadge(d.dk,d.tot)} ${yoyBadgeSmall(d.dk,prev?.dk)}</td>
+        <td class="cp-col">${fmtM(d.cp)}원${shareBadge(d.cp,d.tot)} ${yoyBadgeSmall(d.cp,prev?.cp)}</td>
+      </tr>`;
+    }).join('');
+    ysEl.innerHTML=`<table>
+      <thead><tr>
+        <th>연도</th>
+        <th>전체 매출</th>
+        <th style="color:#6c8fff;">오너클랜</th>
+        <th style="color:#4ecdc4;">도매꾹</th>
+        <th style="color:#fbbf24;">쿠팡</th>
+      </tr></thead>
+      <tbody>${ysRows}</tbody>
+    </table>`;
+  } else {
+    ysEl.style.display='none';
+  }
+
   document.getElementById('kpiGrid').innerHTML=[
     {label:'총 매출',val:fmtM(totRev),color:C.blue},{label:'운영 지출-1',val:fmtM(totExp1),color:C.red},
     {label:'사입 지출-2',val:fmtM(totExp2),color:C.amber},{label:'영업이익',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red},
@@ -763,26 +822,33 @@ function renderPurchaseData(data){
   // 기간 배지
   const fy=document.getElementById('ps-from-y').value,fm=document.getElementById('ps-from-m').value;
   const ty=document.getElementById('ps-to-y').value,tm=document.getElementById('ps-to-m').value;
-  const rangeStr=(fy||fm)?(fy+(fm?'-'+fm:''))+' ~ '+(ty||fy)+(tm?'-'+tm:''):'전체 기간';
+  const type=document.getElementById('ps-type').value;
+  const hasFilter=fy||fm||ty||tm||(type!=='all');
+  const fromLabel=fy?(fy+(fm?'년 '+parseInt(fm)+'월':'년')):'';
+  const toLabel=ty?(ty+(tm?'년 '+parseInt(tm)+'월':'년')):'';
+  const rangeStr=hasFilter?(fromLabel+(toLabel&&toLabel!==fromLabel?' ~ '+toLabel:'')):'전체 기간';
   document.getElementById('ratioRangeBadge').textContent=rangeStr+' · '+data.length+'개월';
 
-  // KPI
-  // 평균 단가 계산 (사입금액 / SKU 수)
+  // 평균 단가 계산
   const avgNewUnit=totNewSku>0?Math.round(totNewAmt/totNewSku):0;
   const avgReUnit=totReSku>0?Math.round(totReAmt/totReSku):0;
   const avgTotUnit=totSku>0?Math.round(totAmt/totSku):0;
   const avgMonthly=data.length>0?Math.round(totAmt/data.length):0;
 
-  document.getElementById('purchaseKpi').innerHTML=[
+  const kpiTop=[
     {label:'신제품 사입금액',val:fmtM(totNewAmt)+'원',sub:`비율 ${newAmtPct.toFixed(1)}% / SKU ${totNewSku.toLocaleString()}건`,color:C.blue},
     {label:'리오더 사입금액',val:fmtM(totReAmt)+'원',sub:`비율 ${reAmtPct.toFixed(1)}% / SKU ${totReSku.toLocaleString()}건`,color:C.teal},
-    {label:'전체 사입금액',val:fmtM(totAmt)+'원',sub:`${data.length}개월 합계 / 월평균 ${fmtM(avgMonthly)}원`,color:C.amber},
-    {label:'전체 SKU 수',val:totSku.toLocaleString()+'건',sub:`신제품 ${totNewSku}건 / 리오더 ${totReSku}건`,color:C.purple},
-    {label:'신제품 평균단가',val:fmtM(avgNewUnit)+'원',sub:`1SKU당 평균 사입단가`,color:C.blue},
-    {label:'리오더 평균단가',val:fmtM(avgReUnit)+'원',sub:`1SKU당 평균 사입단가`,color:C.teal},
-    {label:'전체 평균단가',val:fmtM(avgTotUnit)+'원',sub:`신제품+리오더 통합`,color:C.amber},
+    {label:'전체 사입금액',val:fmtM(totAmt)+'원',sub:`${data.length}개월 합계`,color:C.amber},
+    {label:'전체 SKU 수',val:totSku.toLocaleString()+'건',sub:`신제품 ${totNewSku.toLocaleString()}건 / 리오더 ${totReSku.toLocaleString()}건`,color:C.purple},
+  ];
+  const kpiBot=[
+    {label:'신제품 평균단가',val:avgNewUnit>0?fmtM(avgNewUnit)+'원':'-',sub:'1SKU당 평균 사입단가',color:C.blue},
+    {label:'리오더 평균단가',val:avgReUnit>0?fmtM(avgReUnit)+'원':'-',sub:'1SKU당 평균 사입단가',color:C.teal},
+    {label:'전체 평균단가',val:avgTotUnit>0?fmtM(avgTotUnit)+'원':'-',sub:'신제품+리오더 통합',color:C.amber},
     {label:'월평균 사입금액',val:fmtM(avgMonthly)+'원',sub:`${data.length}개월 기준`,color:C.purple},
-  ].map(k=>`<div class="skpi" style="--skpi-color:${k.color}"><div class="skpi-label">${k.label}</div><div class="skpi-val">${k.val}</div><div class="skpi-sub">${k.sub}</div></div>`).join('');
+  ];
+  const kpiHtml=k=>`<div class="skpi" style="--skpi-color:${k.color}"><div class="skpi-label">${k.label}</div><div class="skpi-val">${k.val}</div><div class="skpi-sub">${k.sub}</div></div>`;
+  document.getElementById('purchaseKpi').innerHTML=kpiTop.map(kpiHtml).join('')+'</div><div class="search-kpi" style="margin-top:0;margin-bottom:12px;">'+kpiBot.map(kpiHtml).join('');
 
   // 비율 바 (금액)
   const nb=Math.max(newAmtPct,4),rb=Math.max(reAmtPct,4);
@@ -1073,69 +1139,65 @@ function importMainData(wb){
 
 function importPurchaseData(wb){
   const ws=wb.Sheets[wb.SheetNames[0]];
+  // raw:false → 날짜를 "1/1/2022" 문자열로 받아 타입 혼란 방지
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
-  const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
 
-  // 날짜 변환 — 숫자 시리얼, 날짜문자열, JS Date 객체 모두 처리
-  function toYYYYMM(raw, formatted){
-    if(typeof raw==='number'&&raw>40000) return excelDateToYYYYMM(raw);
-    const s=String(formatted||'');
-    const m1=s.match(/(\d{4})[\/\-](\d{1,2})/);
-    if(m1) return m1[1]+'-'+m1[2].padStart(2,'0');
-    const m2=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-    if(m2) return m2[3]+'-'+m2[1].padStart(2,'0');
+  function parseDateCell(s){
+    if(!s||typeof s!=='string')return null;
+    s=s.trim();
+    if(!s||s.includes('총합')||s.includes('합계')||s==='월')return null;
+    let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(m){const y=parseInt(m[3]);if(y>=2020&&y<=2099)return m[3]+'-'+m[1].padStart(2,'0');}
+    m=s.match(/^(\d{4})[\-\/](\d{1,2})/);
+    if(m){const y=parseInt(m[1]);if(y>=2020&&y<=2099)return m[1]+'-'+m[2].padStart(2,'0');}
     return null;
   }
 
-  // 헤더 행 찾기 + 날짜 열 자동 감지 (A열 또는 B열)
-  let hi=-1, dateCol=0;
+  let hi=-1;
   for(let i=0;i<Math.min(rows.length,5);i++){
-    if(rows[i].some(c=>String(c).includes('신제품')||String(c).includes('리오더'))){
-      hi=i;
-      // 날짜 컬럼: '월' 이 있는 인덱스 찾기
-      const mi=rows[i].findIndex(c=>String(c).includes('월'));
-      dateCol=mi>=0?mi:0;
-      break;
-    }
+    if(rows[i].some(c=>String(c).includes('신제품')||String(c).includes('리오더'))){hi=i;break;}
   }
-  if(hi<0){hi=1;dateCol=0;}
+  if(hi<0)hi=1;
+
+  // 날짜 컬럼 위치 자동 탐색
+  let dateCol=-1,dataStart=1;
+  const firstDataRow=rows[hi+1]||[];
+  for(let j=0;j<Math.min(firstDataRow.length,4);j++){
+    if(parseDateCell(String(firstDataRow[j]||''))){dateCol=j;dataStart=j+1;break;}
+  }
+  if(dateCol<0){
+    document.getElementById('importPurchaseResult').innerHTML=
+      '<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">날짜 컬럼을 찾을 수 없습니다. 파일의 날짜 형식을 확인해주세요.</div>';
+    return;
+  }
 
   const imported=[],skipped=[];
   for(let i=hi+1;i<rows.length;i++){
-    const row=rows[i];
-    const rawRow=rawRows[i];
-    if(!row||!rawRow) continue;
-
-    const drRaw=rawRow[dateCol];
-    const drFmt=row[dateCol];
-    const drStr=String(drFmt||'');
-    if(!drStr||drStr.includes('총합')||drStr.includes('합계')||drStr.trim()==='') continue;
-
-    const month=toYYYYMM(drRaw, drFmt);
+    const row=rows[i];if(!row||row.length===0)continue;
+    const dateStr=String(row[dateCol]||'');
+    if(dateStr.includes('총합')||dateStr.includes('합계'))continue;
+    const month=parseDateCell(dateStr);
     if(!month){skipped.push(i);continue;}
-
-    // 날짜 열 다음 4개 컬럼: 신제품금액, 신제품SKU, 리오더금액, 리오더SKU
-    const newPurchaseAmt=parseNum(rawRow[dateCol+1]??row[dateCol+1]);
-    const newPurchaseSku=parseNum(rawRow[dateCol+2]??row[dateCol+2]);
-    const reorderAmt=parseNum(rawRow[dateCol+3]??row[dateCol+3]);
-    const reorderSku=parseNum(rawRow[dateCol+4]??row[dateCol+4]);
-
+    const newPurchaseAmt=parseNum(row[dataStart]);
+    const newPurchaseSku=parseNum(row[dataStart+1]);
+    const reorderAmt=parseNum(row[dataStart+2]);
+    const reorderSku=parseNum(row[dataStart+3]);
     if(!newPurchaseAmt&&!newPurchaseSku&&!reorderAmt&&!reorderSku){skipped.push(i);continue;}
     imported.push({month,newPurchaseAmt,newPurchaseSku,reorderAmt,reorderSku});
   }
 
   if(!imported.length){
-    document.getElementById('importPurchaseResult').innerHTML=`<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">데이터를 찾을 수 없습니다.<br>헤더행에 '월', '신제품', '리오더' 컬럼이 있는지 확인해주세요.</div>`;
+    document.getElementById('importPurchaseResult').innerHTML=
+      '<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">데이터를 찾을 수 없습니다.</div>';
     return;
   }
   const existing=loadPurchase();const merged=[...existing];let nc=0,oc=0;
   imported.forEach(r=>{const idx=merged.findIndex(e=>e.month===r.month);if(idx>=0){merged[idx]=r;oc++;}else{merged.push(r);nc++;}});
   savePurchase(merged);
-  document.getElementById('importPurchaseResult').innerHTML=`<div class="import-note">✅ 사입 데이터 가져오기 완료!<br>신규: <strong>${nc}개월</strong> · 업데이트: <strong>${oc}개월</strong> · 건너뜀(0값): ${skipped.length}행</div>`;
+  document.getElementById('importPurchaseResult').innerHTML=
+    `<div class="import-note">✅ 가져오기 완료! 신규: <strong>${nc}개월</strong> · 업데이트: <strong>${oc}개월</strong> · 건너뜀: ${skipped.length}행</div>`;
   showAlert(`사입 데이터 ${nc+oc}개월 완료!`);
 }
-
-// ── CSV 내보내기 ──
 function exportCSV(){
   const data=getData();if(!data.length){showAlert('데이터 없음','var(--red)');return;}
   const h=['연월','매출합계','오너클랜','도매꾹','쿠팡','지출-1','지출-2','영업이익','마진율','실재고','재고율','상품마진율','배송포함마진율'];
