@@ -1034,31 +1034,61 @@ function importMainData(wb){
 
 function importPurchaseData(wb){
   const ws=wb.Sheets[wb.SheetNames[0]];
-  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-  // 헤더 행 찾기
+  // raw_dates:true 로 날짜를 JS Date 객체로 받음
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+  const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+
+  // 날짜 변환 함수 — SheetJS raw 값(숫자) 또는 문자열 모두 처리
+  function toYYYYMM(raw, formatted){
+    // raw가 숫자(Excel 시리얼)인 경우
+    if(typeof raw==='number'&&raw>40000) return excelDateToYYYYMM(raw);
+    // formatted가 날짜 문자열인 경우 (예: "2023-01-01", "1/1/2023")
+    const s=String(formatted||'');
+    const m1=s.match(/(\d{4})[\/\-](\d{1,2})/);
+    if(m1) return m1[1]+'-'+m1[2].padStart(2,'0');
+    const m2=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if(m2) return m2[3]+'-'+m2[1].padStart(2,'0');
+    return null;
+  }
+
+  // 헤더 행 찾기 (B열 기준 — A열은 비어있음)
   let hi=-1;
   for(let i=0;i<Math.min(rows.length,5);i++){
     if(rows[i].some(c=>String(c).includes('신제품')||String(c).includes('리오더'))){hi=i;break;}
   }
-  if(hi<0)hi=0; // 헤더 없으면 0행
+  if(hi<0) hi=1; // 기본 1행(0-indexed)
+
   const imported=[],skipped=[];
   for(let i=hi+1;i<rows.length;i++){
-    const row=rows[i];if(!row||!row[1])continue;
-    const dr=row[1]; // B열이 월
-    if(String(dr).includes('총합'))continue;
-    let month=null;
-    if(typeof dr==='number'&&dr>40000)month=excelDateToYYYYMM(dr);
-    else if(String(dr).match(/\d{4}-\d{2}/))month=String(dr).slice(0,7);
+    const row=rows[i];
+    const rawRow=rawRows[i];
+    if(!row||!rawRow) continue;
+
+    // B열(인덱스1)이 날짜
+    const drRaw=rawRow[1];
+    const drFmt=row[1];
+    const drStr=String(drFmt||'');
+
+    if(!drStr||drStr.includes('총합')||drStr.includes('합계')) continue;
+
+    const month=toYYYYMM(drRaw, drFmt);
     if(!month){skipped.push(i);continue;}
-    const newPurchaseAmt=parseNum(row[2]);
-    const newPurchaseSku=parseNum(row[3]);
-    const reorderAmt=parseNum(row[4]);
-    const reorderSku=parseNum(row[5]);
-    // 모두 0인 행은 스킵 (데이터 없는 초기 행)
+
+    // C~F열 (인덱스 2~5) — "원", "건" 문자 제거 후 숫자 파싱
+    const newPurchaseAmt=parseNum(rawRow[2]||row[2]);
+    const newPurchaseSku=parseNum(rawRow[3]||row[3]);
+    const reorderAmt=parseNum(rawRow[4]||row[4]);
+    const reorderSku=parseNum(rawRow[5]||row[5]);
+
+    // 모두 0이면 스킵
     if(!newPurchaseAmt&&!newPurchaseSku&&!reorderAmt&&!reorderSku){skipped.push(i);continue;}
     imported.push({month,newPurchaseAmt,newPurchaseSku,reorderAmt,reorderSku});
   }
-  if(!imported.length){document.getElementById('importPurchaseResult').innerHTML=`<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">데이터를 찾을 수 없습니다. 파일 형식을 확인해주세요.</div>`;return;}
+
+  if(!imported.length){
+    document.getElementById('importPurchaseResult').innerHTML=`<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">데이터를 찾을 수 없습니다.<br>파일의 B열에 날짜, C~F열에 금액/SKU 데이터가 있는지 확인해주세요.</div>`;
+    return;
+  }
   const existing=loadPurchase();const merged=[...existing];let nc=0,oc=0;
   imported.forEach(r=>{const idx=merged.findIndex(e=>e.month===r.month);if(idx>=0){merged[idx]=r;oc++;}else{merged.push(r);nc++;}});
   savePurchase(merged);
