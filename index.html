@@ -42,7 +42,7 @@ nav{padding:12px 0;flex:1;}
 .btn.success{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.3);color:var(--green);}
 .btn-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .view{display:none;}.view.active{display:block;}
-.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:24px;}@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}@media(max-width:800px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent));}
 .kpi-label{font-size:11px;color:var(--text2);margin-bottom:8px;}
@@ -690,11 +690,18 @@ function renderDashboard(){
     ysEl.style.display='none';
   }
 
+  const lastMonth=data[data.length-1]?.month||'';
+  const lastStock=data[data.length-1]?.stock||0;
+  const totalStock=raw.reduce((s,r)=>s+(r.stock||0),0);
   document.getElementById('kpiGrid').innerHTML=[
-    {label:'총 매출',val:fmtM(totRev),color:C.blue},{label:'운영 지출-1',val:fmtM(totExp1),color:C.red},
-    {label:'사입 지출-2',val:fmtM(totExp2),color:C.amber},{label:'영업이익',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red},
-    {label:'평균 마진율',val:fmtPct(avgMargin),color:avgMargin>=0?C.teal:C.red},{label:'최근 실재고',val:fmtM(data[data.length-1]?.stock||0),color:C.purple},
-  ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div></div>`).join('');
+    {label:'총 매출',val:fmtM(totRev),color:C.blue,sub:''},
+    {label:'운영 지출-1',val:fmtM(totExp1),color:C.red,sub:''},
+    {label:'사입 지출-2',val:fmtM(totExp2),color:C.amber,sub:''},
+    {label:'영업이익',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red,sub:''},
+    {label:'평균 마진율',val:fmtPct(avgMargin),color:avgMargin>=0?C.teal:C.red,sub:''},
+    {label:`실재고 (${lastMonth})`,val:fmtM(lastStock),color:C.purple,sub:'최근 월 기준'},
+    {label:'누적 실재고',val:fmtM(totalStock),color:C.purple,sub:'전체 기간 합계'},
+  ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
   const labels=data.map(r=>r.month.slice(2));
   const profits=data.map(r=>r.operatingProfit||0);
   document.getElementById('profitBadge').textContent='평균 '+fmtM(profits.reduce((a,b)=>a+b,0)/profits.length);
