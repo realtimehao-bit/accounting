@@ -553,7 +553,13 @@ function getPurchase(){return loadPurchase().sort((a,b)=>a.month.localeCompare(b
 function fmt(n){if(n==null||isNaN(n))return'-';return Math.round(n).toLocaleString('ko-KR');}
 function fmtM(n){if(n==null||isNaN(n))return'-';const abs=Math.abs(n),s=n<0?'-':'';if(abs>=1e8)return s+(abs/1e8).toFixed(1)+'억';if(abs>=1e4)return s+(abs/1e4).toFixed(0)+'만';return s+abs.toLocaleString();}
 function fmtPct(n){if(n==null||isNaN(n))return'-';return(n*100).toFixed(1)+'%';}
-function excelDateToYYYYMM(s){if(!s||isNaN(s))return null;const d=new Date(Math.round((s-25569)*86400*1000));return`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;}
+function excelDateToYYYYMM(s){
+  if(!s||isNaN(s))return null;
+  const d=new Date(Math.round((s-25569)*86400*1000));
+  const y=d.getUTCFullYear();
+  if(y<2000||y>2099)return null; // 유효하지 않은 연도 제외
+  return`${y}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
+}
 function parseNum(v){if(v==null)return 0;return parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0;}
 function showAlert(msg,color='var(--green)'){const el=document.getElementById('alertBox');el.textContent=msg;el.style.borderColor=color;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 function yoyBadge(pct,unit='%'){if(pct==null||isNaN(pct))return'-';const s=pct>=0?'+':'',cls=pct>0?'up':pct<0?'dn':'neu';return`<span class="yoy-badge ${cls}">${s}${pct.toFixed(1)}${unit}</span>`;}
@@ -695,7 +701,7 @@ function initPurchaseFilters(){
   const pd=getPurchase();
   // 사입 데이터가 없으면 회계 데이터 연도 사용
   const allData=[...getData(),...pd];
-  const years=[...new Set(allData.map(r=>r.month.slice(0,4)))].sort();
+  const years=[...new Set(allData.map(r=>r.month.slice(0,4)).filter(y=>y>='2020'&&y<='2099'))].sort();
   const months=Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
   ['ps-from-y','ps-to-y'].forEach(id=>{
     const el=document.getElementById(id);
