@@ -916,8 +916,8 @@ function renderPurchaseData(data){
 
   // 차트 2: 비율 % 스택
   mc('chartPurchaseRatio',{type:'bar',data:{labels,datasets:[
-    {label:'신제품 %',data:newPcts,backgroundColor:'rgba(108,143,255,.7)',borderRadius:0},
     {label:'리오더 %',data:rePcts,backgroundColor:'rgba(78,205,196,.7)',borderRadius:0},
+    {label:'신제품 %',data:newPcts,backgroundColor:'rgba(108,143,255,.7)',borderRadius:0},
   ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(1)+'%'}}},scales:{x:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{stacked:true,max:100,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v+'%'}}}}});
 
   // 차트 3: SKU 추이
