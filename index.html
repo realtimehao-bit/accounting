@@ -859,11 +859,15 @@ function renderPurchaseData(data){
   const rangeStr=hasFilter?(fromLabel+(toLabel&&toLabel!==fromLabel?' ~ '+toLabel:'')):'전체 기간';
   document.getElementById('ratioRangeBadge').textContent=rangeStr+' · '+data.length+'개월';
 
-  // 평균 단가 계산
+  // 평균 단가 계산 — filterType에 따라 기준 변경
   const avgNewUnit=totNewSku>0?Math.round(totNewAmt/totNewSku):0;
   const avgReUnit=totReSku>0?Math.round(totReAmt/totReSku):0;
   const avgTotUnit=totSku>0?Math.round(totAmt/totSku):0;
   const avgMonthly=data.length>0?Math.round(totAmt/data.length):0;
+
+  // filterType별 표시 단가
+  const dispAvgNew=filterType==='reorder'?'-':(avgNewUnit>0?fmtM(avgNewUnit)+'원':'-');
+  const dispAvgRe=filterType==='new'?'-':(avgReUnit>0?fmtM(avgReUnit)+'원':'-');
 
   const kpiTop=[
     {label:'신제품 사입금액',val:fmtM(totNewAmt)+'원',sub:`비율 ${newAmtPct.toFixed(1)}% / SKU ${totNewSku.toLocaleString()}건`,color:C.blue},
@@ -872,8 +876,8 @@ function renderPurchaseData(data){
     {label:'전체 SKU 수',val:totSku.toLocaleString()+'건',sub:`신제품 ${totNewSku.toLocaleString()}건 / 리오더 ${totReSku.toLocaleString()}건`,color:C.purple},
   ];
   const kpiBot=[
-    {label:'신제품 평균단가',val:avgNewUnit>0?fmtM(avgNewUnit)+'원':'-',sub:'1SKU당 평균 사입단가',color:C.blue},
-    {label:'리오더 평균단가',val:avgReUnit>0?fmtM(avgReUnit)+'원':'-',sub:'1SKU당 평균 사입단가',color:C.teal},
+    {label:'신제품 평균단가',val:dispAvgNew,sub:filterType==='reorder'?'해당없음':'1SKU당 평균 사입단가',color:C.blue},
+    {label:'리오더 평균단가',val:dispAvgRe,sub:filterType==='new'?'해당없음':'1SKU당 평균 사입단가',color:C.teal},
     {label:'전체 평균단가',val:avgTotUnit>0?fmtM(avgTotUnit)+'원':'-',sub:'신제품+리오더 통합',color:C.amber},
     {label:'월평균 사입금액',val:fmtM(avgMonthly)+'원',sub:`${data.length}개월 기준`,color:C.purple},
   ];
