@@ -842,12 +842,16 @@ function renderPurchaseData(data){
   const totReAmt=data.reduce((s,r)=>s+(r.reorderAmt||0),0);
   const totReSku=data.reduce((s,r)=>s+(r.reorderSku||0),0);
   // 유형별 합계: 신제품만/리오더만 선택시 해당 데이터만 집계
+  // 표시용 금액: filterType에 따라 변경
   const totAmt=filterType==='new'?totNewAmt:filterType==='reorder'?totReAmt:totNewAmt+totReAmt;
   const totSku=filterType==='new'?totNewSku:filterType==='reorder'?totReSku:totNewSku+totReSku;
-  const newAmtPct=totAmt>0?totNewAmt/totAmt*100:0;
-  const reAmtPct=totAmt>0?totReAmt/totAmt*100:0;
-  const newSkuPct=totSku>0?totNewSku/totSku*100:0;
-  const reSkuPct=totSku>0?totReSku/totSku*100:0;
+  // 비율은 항상 신제품+리오더 전체 합계 기준으로 계산
+  const totAmtAll=totNewAmt+totReAmt;
+  const totSkuAll=totNewSku+totReSku;
+  const newAmtPct=totAmtAll>0?totNewAmt/totAmtAll*100:0;
+  const reAmtPct=totAmtAll>0?totReAmt/totAmtAll*100:0;
+  const newSkuPct=totSkuAll>0?totNewSku/totSkuAll*100:0;
+  const reSkuPct=totSkuAll>0?totReSku/totSkuAll*100:0;
 
   // 기간 배지
   const fy=document.getElementById('ps-from-y').value,fm=document.getElementById('ps-from-m').value;
