@@ -426,10 +426,10 @@ function runSim(){
     const totSku=nSku+rSku;
     const skuRev=totSku>0?tR/totSku:0;
 
-    // 월 출고량 계산 (사입 100만원당 출고수 × 총사입금)
-    const monthlyShip=Math.round(tI/1000000*REAL.shipPerM[yr]);
+    // 월 출고량 계산 (사입 100만원당 출고수 × 총사입금 / yr은 1~3 범위로 고정)
+    const yrCapped=Math.min(Math.max(yr,1),3);
+    const monthlyShip=Math.round(tI/1000000*REAL.shipPerM[yrCapped]);
     const dailyShip=Math.round(monthlyShip/REAL.workDays);
-    // 1인 운영 가능 여부
     const soloStatus=dailyShip<=100?'✅':dailyShip<=200?'⚠️':'❌';
     const soloLabel=dailyShip<=100?'1인 가능':dailyShip<=200?'1인 주의':'인력 필요';
 
