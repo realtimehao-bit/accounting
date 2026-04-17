@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2B 사입 투자 시뮬레이터</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0f1117;--bg2:#161822;--bg3:#1e2030;--bg4:#252840;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e8eaf0;--text2:#8b8fa8;--text3:#555870;--accent:#6c8fff;--accent2:#4ecdc4;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--purple:#a78bfa;--mono:'JetBrains Mono',monospace;--sans:'Noto Sans KR',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.header-title{font-size:17px;font-weight:700;}
+.header-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.badge{font-size:11px;padding:3px 10px;border-radius:99px;font-weight:500;background:rgba(78,205,196,.15);border:1px solid rgba(78,205,196,.3);color:var(--accent2);}
+.main{padding:24px 32px;max-width:1300px;margin:0 auto;}
+.input-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;}
+.panel-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.panel-sub{font-size:12px;color:var(--text2);margin-bottom:20px;}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.input-block{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.iblock-title{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.iblock-title::before{content:'';width:3px;height:12px;border-radius:2px;}
+.t-new::before{background:var(--accent);}
+.t-period::before{background:var(--amber);}
+.amt-wrap{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.amt-input{background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:22px;font-weight:700;color:var(--accent);font-family:var(--mono);outline:none;width:100%;transition:border-color .15s;}
+.amt-input:focus{border-color:var(--accent);}
+.amt-unit{font-size:13px;color:var(--text2);white-space:nowrap;}
+.quick-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.qbtn{padding:5px 12px;border-radius:99px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.qbtn:hover{background:var(--bg4);color:var(--text);}
+.info-box{background:var(--bg4);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:2;margin-top:10px;}
+.v-blue{color:var(--accent);font-family:var(--mono);font-weight:500;}
+.v-teal{color:var(--accent2);font-family:var(--mono);font-weight:500;}
+.v-amber{color:var(--amber);font-family:var(--mono);font-weight:500;}
+.v-green{color:var(--green);font-family:var(--mono);font-weight:500;}
+.period-btns{display:flex;gap:8px;margin-top:4px;}
+.pbtn{flex:1;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.pbtn.active{background:var(--amber);border-color:var(--amber);color:#000;font-weight:700;}
+.pbtn:hover:not(.active){background:var(--bg4);}
+.calc-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:8px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);transition:opacity .15s;margin-top:16px;}
+.calc-btn:hover{opacity:.85;}
+.result-panel{display:none;}
+.result-panel.show{display:block;}
+.bb{border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+.bb-green{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3);}
+.bb-red{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.3);}
+.bb-icon{font-size:28px;}
+.bb-title{font-size:16px;font-weight:700;}
+.bb-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent));}
+.kpi-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.kpi-value{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--kpi-color,var(--text));}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:4px;}
+.year-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.year-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.year-card-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.yr{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+.yr-l{color:var(--text3);}
+.yr-v{font-family:var(--mono);font-weight:500;}
+.cg2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.ct{font-size:13px;font-weight:500;margin-bottom:16px;}
+.cw{position:relative;}
+.tc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;}
+.th2{padding:14px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;display:flex;justify-content:space-between;align-items:center;}
+.tw{overflow-x:auto;max-height:420px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{padding:9px 12px;text-align:right;font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;position:sticky;top:0;z-index:1;}
+th:first-child{text-align:left;}
+td{padding:9px 12px;text-align:right;border-bottom:0.5px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap;}
+td:first-child{text-align:left;font-family:var(--sans);color:var(--text);font-weight:500;}
+tr.be-row td{background:rgba(74,222,128,.07);font-weight:600;}
+tr.yr-sep td{background:var(--bg3);font-size:10px;color:var(--text3);}
+tr:hover td{background:rgba(255,255,255,.02);}
+.pos{color:var(--green)!important;}.neg{color:var(--red)!important;}
+.notice{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--text2);line-height:1.9;margin-top:4px;}
+.notice strong{color:var(--amber);}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+.reinvest-block{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;}
+.reinvest-title{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.reinvest-title::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--purple);}
+.pct-btns{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.pct-btn{padding:6px 14px;border-radius:99px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.pct-btn.active{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:600;}
+.pct-btn:hover:not(.active){background:var(--bg4);}
+.guide-box{background:var(--bg4);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:2;margin-top:8px;}
+.roi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.roi-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
+.roi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--purple);}
+.roi-label{font-size:11px;color:var(--text2);margin-bottom:5px;}
+.roi-value{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--purple);}
+.roi-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+.opex-wrap{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.opex-input{background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:var(--amber);font-family:var(--mono);outline:none;width:120px;transition:border-color .15s;}
+.opex-input:focus{border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><div class="header-title">📊 B2B 사입 투자 수익 시뮬레이터</div><div class="header-sub">실제 운영 데이터(2023~2025년, 37개월) 패턴 완전 반영</div></div>
+  <span class="badge">실데이터 기반</span>
+</div>
+<div class="main">
+  <div class="input-panel">
+    <div class="panel-title">투자 조건 설정</div>
+    <div class="panel-sub">신제품 월 투자금(X)을 입력하면 실제 운영 패턴 기반으로 리오더 비율과 수익 시점을 자동 계산합니다</div>
+    <div class="input-grid">
+      <div class="input-block">
+        <div class="iblock-title t-new">신제품 월 투자금 (X값)</div>
+        <div class="amt-wrap">
+          <input type="number" class="amt-input" id="newAmt" value="100" min="10" max="10000" step="10" oninput="updatePreview()">
+          <span class="amt-unit">만원 / 월</span>
+        </div>
+        <div class="quick-btns">
+          <button class="qbtn" onclick="setAmt(50)">50만</button>
+          <button class="qbtn" onclick="setAmt(100)">100만</button>
+          <button class="qbtn" onclick="setAmt(200)">200만</button>
+          <button class="qbtn" onclick="setAmt(300)">300만</button>
+          <button class="qbtn" onclick="setAmt(500)">500만</button>
+        </div>
+        <div class="info-box">
+          실제 데이터 기반 리오더 자동 적용<br>
+          • 1년차 리오더: <span class="v-blue" id="re1">-</span> (x5.5배)<br>
+          • 2년차 리오더: <span class="v-teal" id="re2">-</span> (x14.2배)<br>
+          • 3년차 리오더: <span class="v-amber" id="re3">-</span> (x2.3배)
+        </div>
+        <div class="info-box" style="margin-top:8px;">
+          <strong style="color:var(--text);display:block;margin-bottom:4px;">📦 예상 월 사입 SKU 수</strong>
+          <div style="overflow-x:auto;">
+          <table style="width:100%;font-size:11px;border-collapse:collapse;">
+            <tr style="color:var(--text3);"><td style="padding:2px 6px;">구분</td><td style="padding:2px 6px;text-align:right;">1년차</td><td style="padding:2px 6px;text-align:right;">2년차</td><td style="padding:2px 6px;text-align:right;">3년차</td><td style="padding:2px 6px;text-align:right;color:var(--amber);">평균</td></tr>
+            <tr style="border-top:0.5px solid var(--border);"><td style="padding:3px 6px;color:var(--text2);">신제품 단가</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">2.1만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">1.9만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">1.8만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);">2.0만원</td></tr>
+            <tr style="border-top:0.5px solid var(--border);"><td style="padding:3px 6px;color:var(--text2);">리오더 단가</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">6.6만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">7.1만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">0.6만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);">4.2만원</td></tr>
+            <tr style="border-top:0.5px solid var(--border);background:rgba(108,143,255,.05);"><td style="padding:3px 6px;color:var(--accent);">신제품 SKU</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent);" id="sku_n1">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent);" id="sku_n2">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent);" id="sku_n3">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);" id="sku_na">-</td></tr>
+            <tr style="border-top:0.5px solid var(--border);background:rgba(78,205,196,.05);"><td style="padding:3px 6px;color:var(--accent2);">리오더 SKU</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent2);" id="sku_r1">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent2);" id="sku_r2">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent2);" id="sku_r3">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);" id="sku_ra">-</td></tr>
+          </table>
+          </div>
+        </div>
+      </div>
+      <div class="input-block">
+        <div class="iblock-title t-period">시뮬레이션 기간</div>
+        <div class="period-btns">
+          <button class="pbtn" onclick="setPeriod(12)">1년</button>
+          <button class="pbtn" onclick="setPeriod(24)">2년</button>
+          <button class="pbtn active" onclick="setPeriod(36)">3년</button>
+        </div>
+        <div class="info-box">
+          <strong style="color:var(--text);display:block;margin-bottom:2px;">실제 운영 패턴 (조영유통 기준)</strong>
+          • 1년차 매출/사입: <span class="v-blue">0.80배</span> — 적자 구간<br>
+          • 2년차 매출/사입: <span class="v-teal">1.43배</span> — 손익 근접<br>
+          • 3년차 매출/사입: <span class="v-amber">18.96배</span> — 흑자 전환<br>
+          • 실제 손익분기: <span class="v-green">37개월차</span><br>
+          • 신제품 마진율 <span class="v-blue">46.7%</span> / 리오더 <span class="v-teal">47.5%</span>
+        </div>
+      </div>
+    </div>
+    <!-- 재투자 비율 + 운영비 -->
+    <div class="reinvest-block">
+      <div class="reinvest-title">월 수익 재투자 비율 & 운영비</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">월 수익 재투자 비율</div>
+          <div class="pct-btns">
+            <button class="pct-btn" onclick="setReinvest(30)">30%</button>
+            <button class="pct-btn" onclick="setReinvest(50)">50%</button>
+            <button class="pct-btn active" onclick="setReinvest(70)">70%</button>
+            <button class="pct-btn" onclick="setReinvest(100)">100%</button>
+            <button class="pct-btn" onclick="setReinvest('custom')" id="customPctBtn">직접입력</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <input type="number" id="reinvestPct" value="70" min="0" max="100" style="background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:16px;font-weight:600;color:var(--purple);font-family:var(--mono);outline:none;width:90px;" oninput="updateGuide()">
+            <span style="font-size:13px;color:var(--text2);">% 재투자</span>
+          </div>
+          <div class="guide-box" id="guideBox">
+            💡 <strong style="color:var(--text);">70% 재투자</strong> — 운영비 일부 충당하면서 성장<br>
+            수익의 70%를 다시 사입에 투자, 30%는 운영비/생활비로 활용
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">월 고정 운영비 (선택)</div>
+          <div class="opex-wrap">
+            <input type="number" class="opex-input" id="opexAmt" value="0" min="0" placeholder="0">
+            <span style="font-size:13px;color:var(--text2);">만원 / 월</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.8;">
+            임대료·인건비·배송비 등<br>입력하면 실제 손익에 반영됩니다
+          </div>
+          <div class="guide-box" style="margin-top:8px;">
+            • 운영비 0원 → 순수 사입 수익만 계산<br>
+            • 운영비 입력 → 실제 손익에 가까운 결과
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="runSim()">🚀 실제 패턴 기반 수익 시뮬레이션 시작</button>
+  </div>
+
+  <div class="result-panel" id="rp">
+    <div id="bbanner"></div>
+    <div class="kpi-grid" id="rkpi"></div>
+    <div class="year-grid" id="ygrid"></div>
+    <div class="roi-grid" id="roiGrid"></div>
+    <div class="cg2">
+      <div class="cc"><div class="ct">📈 누적 투자금 vs 누적 매출</div><div class="cw" style="height:240px;"><canvas id="cCum"></canvas></div></div>
+      <div class="cc"><div class="ct">💰 월별 누적 손익</div><div class="cw" style="height:240px;"><canvas id="cPnl"></canvas></div></div>
+    </div>
+    <div class="cg2">
+      <div class="cc"><div class="ct">📦 월별 사입금액 (신제품 vs 리오더)</div><div class="cw" style="height:220px;"><canvas id="cInvest"></canvas></div></div>
+      <div class="cc"><div class="ct">📊 월별 예상 매출</div><div class="cw" style="height:220px;"><canvas id="cRev"></canvas></div></div>
+    </div>
+    <div class="tc">
+      <div class="th2"><span>월별 상세 시뮬레이션</span><span style="font-size:11px;color:var(--text3);">🟢 손익분기 달성월</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>월차</th><th>신제품사입</th><th>신제품SKU</th><th>리오더사입</th><th>리오더SKU</th><th>운영비</th><th>재투자금</th><th>예상매출</th><th>SKU당매출</th><th>월손익</th><th>누적손익</th></tr></thead>
+        <tbody id="stbl"></tbody>
+      </table></div>
+    </div>
+    <div class="notice">
+      <strong>⚠ 참고사항</strong><br>
+      본 시뮬레이터는 실제 B2B 운영 데이터(2023~2025년, 37개월)의 패턴을 그대로 적용한 추정값입니다.<br>
+      • <strong>임대료·인건비·배송비 등 운영비는 포함되지 않습니다</strong> — 개인별 환경이 다르므로 별도 고려 필요<br>
+      • 리오더 비율은 실제 데이터 자동 적용 (1년차 548%, 2년차 1415%, 3년차 228%)<br>
+      • 실제 수익은 상품 경쟁력·플랫폼 수수료·시장 상황에 따라 달라질 수 있습니다
+    </div>
+  </div>
+</div>
+
+<script>
+const REAL={
+  reRatio:{1:5.48,2:14.15,3:2.28},
+  revRatio:{1:0.80,2:1.43,3:18.96},
+  wt:[0.04,0.06,0.09,0.14,0.22,0.32,0.44,0.57,0.68,0.76,0.83,0.88,0.92,0.95,0.97,0.98,0.99,1.00],
+  newM:0.467, reM:0.475,
+  // 연도별 SKU 단가 (실제 데이터)
+  newUnit:{1:20976,2:19085,3:17696}, // 신제품 사입단가
+  reUnit:{1:65661,2:71324,3:5647},   // 리오더 사입단가
+  avgNewUnit:19705, avgReUnit:42035,  // 전체 평균
+  guides:{
+    0:  {title:'재투자 없음',     desc:'수익을 전혀 재투자하지 않음. 순수 초기 투자금만으로 운영'},
+    30: {title:'보수적 재투자',   desc:'수익의 30%만 재투자. 현금 확보 우선, 안정적 운영 선호'},
+    50: {title:'균형 재투자',     desc:'수익의 절반씩 재투자와 운영비/생활비로 배분'},
+    70: {title:'성장 중심 재투자',desc:'운영비 일부 충당하면서 재투자로 빠른 성장 추구'},
+    100:{title:'전액 재투자',     desc:'수익 전액 재투자. 생활비·운영비 별도. 최대 성장 속도'},
+  }
+};
+let period=36;
+const ch={};
+
+function fmtM(n){
+  if(n==null||isNaN(n))return'-';
+  const a=Math.abs(n),s=n<0?'-':'';
+  if(a>=1e8)return s+(a/1e8).toFixed(1)+'억';
+  if(a>=1e4)return s+Math.round(a/1e4)+'만';
+  return s+Math.round(a).toLocaleString();
+}
+function setAmt(v){document.getElementById('newAmt').value=v;updatePreview();}
+function setPeriod(m){
+  period=m;
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('active',b.textContent===m/12+'년'));
+}
+let reinvestPct = 70;
+function setReinvest(v){
+  if(v==='custom'){
+    document.getElementById('reinvestPct').focus();
+    return;
+  }
+  reinvestPct=v;
+  document.getElementById('reinvestPct').value=v;
+  document.querySelectorAll('.pct-btn').forEach(b=>{
+    const bv=parseInt(b.textContent);
+    b.classList.toggle('active',bv===v);
+  });
+  updateGuide();
+}
+function updateGuide(){
+  reinvestPct=parseInt(document.getElementById('reinvestPct').value)||0;
+  document.querySelectorAll('.pct-btn').forEach(b=>{
+    const bv=parseInt(b.textContent);
+    b.classList.toggle('active',bv===reinvestPct);
+  });
+  const g=REAL.guides[reinvestPct]||{title:`${reinvestPct}% 재투자`,desc:`수익의 ${reinvestPct}%를 다시 사입에 재투자`};
+  document.getElementById('guideBox').innerHTML=
+    `💡 <strong style="color:var(--text);">${g.title}</strong> — ${g.desc.split('.')[0]}<br><span style="color:var(--text3);">${g.desc}</span>`;
+}
+function updatePreview(){
+  const n=(parseFloat(document.getElementById('newAmt').value)||0)*10000;
+  document.getElementById('re1').textContent=fmtM(n*REAL.reRatio[1])+'원/월';
+  document.getElementById('re2').textContent=fmtM(n*REAL.reRatio[2])+'원/월';
+  document.getElementById('re3').textContent=fmtM(n*REAL.reRatio[3])+'원/월';
+  // SKU 수 미리보기
+  for(let yr=1;yr<=3;yr++){
+    const nSku=Math.round(n/REAL.newUnit[yr]);
+    const rAmt=n*REAL.reRatio[yr];
+    const rSku=Math.round(rAmt/REAL.reUnit[yr]);
+    document.getElementById('sku_n'+yr).textContent=nSku.toLocaleString()+'개';
+    document.getElementById('sku_r'+yr).textContent=rSku.toLocaleString()+'개';
+  }
+  // 평균 SKU
+  const avgNSku=Math.round(n/REAL.avgNewUnit);
+  const avgRAmt=n*((REAL.reRatio[1]+REAL.reRatio[2]+REAL.reRatio[3])/3);
+  const avgRSku=Math.round(avgRAmt/REAL.avgReUnit);
+  document.getElementById('sku_na').textContent=avgNSku.toLocaleString()+'개';
+  document.getElementById('sku_ra').textContent=avgRSku.toLocaleString()+'개';
+}
+function dc(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
+function mc(id,cfg){
+  dc(id);const ctx=document.getElementById(id);if(!ctx)return;
+  ch[id]=new Chart(ctx,{...cfg,options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2030',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#8b8fa8',bodyColor:'#e8eaf0'}},
+    scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}}},
+    ...cfg.options}});
+}
+
+function runSim(){
+  const nAmtBase=(parseFloat(document.getElementById('newAmt').value)||0)*10000;
+  if(!nAmtBase){alert('투자금을 입력해주세요');return;}
+  const rPct=(parseInt(document.getElementById('reinvestPct').value)||0)/100;
+  const opex=(parseFloat(document.getElementById('opexAmt').value)||0)*10000;
+  const months=[];
+  let cumI=0,cumR=0,cumP=0,beMonth=-1;
+  let extraInvest=0; // 재투자 누적금
+  const nH=[],rH=[];
+
+  for(let m=1;m<=period;m++){
+    const yr=Math.min(Math.ceil(m/12),3);
+    // 재투자분을 신제품에 추가
+    const nAmt=nAmtBase+extraInvest;
+    const nI=nAmt, rI=nAmt*REAL.reRatio[yr], tI=nI+rI;
+    nH.push(nI);rH.push(rI);
+
+    let nR=0;
+    for(let i=0;i<nH.length;i++){
+      const age=nH.length-1-i;
+      const wi=Math.min(age,REAL.wt.length-1);
+      const pw=wi>0?REAL.wt[wi-1]:0;
+      nR+=nH[i]*(REAL.wt[wi]-pw)*(1+REAL.newM);
+    }
+    let rR=0;
+    for(let i=0;i<rH.length;i++){
+      const age=rH.length-1-i;
+      const wi=Math.min(age*2,REAL.wt.length-1);
+      const pwi=Math.max(0,wi-2);
+      rR+=rH[i]*Math.max(0,REAL.wt[wi]-REAL.wt[pwi])*(1+REAL.reM);
+    }
+    const tR=nR+rR;
+    const mP=tR-tI-opex; // 운영비 차감
+    const mProfit=Math.max(0,mP); // 실제 수익 (마이너스면 0으로)
+    extraInvest=mProfit*rPct; // 다음달 재투자금
+    cumI+=tI+opex;cumR+=tR;cumP+=mP;
+    if(beMonth<0&&cumP>=0)beMonth=m;
+    const nSku=Math.round(nI/REAL.newUnit[yr]);
+    const rSku=Math.round(rI/REAL.reUnit[yr]);
+    const totSku=nSku+rSku;
+    const skuRev=totSku>0?tR/totSku:0;
+    months.push({m,yr:Math.ceil(m/12),nI,rI,tI,nR,rR,tR,mP,opex,cumI,cumR,cumP,nSku,rSku,totSku,skuRev,extra:extraInvest,isBE:beMonth===m});
+  }
+
+  document.getElementById('rp').classList.add('show');
+  const last=months[months.length-1];
+
+  // 배너
+  const bb=document.getElementById('bbanner');
+  if(beMonth>0){
+    bb.innerHTML=`<div class="bb bb-green"><div class="bb-icon">🎯</div><div><div class="bb-title" style="color:var(--green);">손익분기점: ${beMonth}개월차 달성!</div><div class="bb-sub">${Math.ceil(beMonth/12)}년 ${beMonth%12||12}개월 후 누적 투자금 회수 시작</div></div></div>`;
+  } else {
+    bb.innerHTML=`<div class="bb bb-red"><div class="bb-icon">⏳</div><div><div class="bb-title" style="color:var(--red);">${period}개월 내 손익분기 미달성</div><div class="bb-sub">3년 기간으로 늘리거나 투자금을 조정해보세요</div></div></div>`;
+  }
+
+  // KPI
+  document.getElementById('rkpi').innerHTML=[
+    {label:`총 투자금 (${period}개월)`,val:fmtM(last.cumI)+'원',color:'#f87171',sub:'신제품+리오더 합산'},
+    {label:'총 예상 매출',val:fmtM(last.cumR)+'원',color:'#6c8fff',sub:'마진 포함 판매가 기준'},
+    {label:'누적 손익',val:fmtM(last.cumP)+'원',color:last.cumP>=0?'#4ade80':'#f87171',sub:last.cumP>=0?'✅ 흑자':'📉 적자'},
+    {label:'손익분기',val:beMonth>0?beMonth+'개월':'미달성',color:beMonth>0?'#4ade80':'#f87171',sub:beMonth>0?`${Math.ceil(beMonth/12)}년차 달성`:`${period}개월 초과`},
+  ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  // 연도별 요약
+  const maxYr=Math.ceil(period/12);
+  document.getElementById('ygrid').innerHTML=Array.from({length:maxYr},(_,yi)=>{
+    const ym=months.filter(m=>m.yr===yi+1);
+    const yI=ym.reduce((s,m)=>s+m.tI,0);
+    const yR=ym.reduce((s,m)=>s+m.tR,0);
+    const yP=ym.reduce((s,m)=>s+m.mP,0);
+    const yNI=ym.reduce((s,m)=>s+m.nI,0);
+    const yRI=ym.reduce((s,m)=>s+m.rI,0);
+    const yNSku=ym.reduce((s,m)=>s+m.nSku,0);
+    const yRSku=ym.reduce((s,m)=>s+m.rSku,0);
+    const yTSku=yNSku+yRSku;
+    const ySkuRev=yTSku>0?yR/yTSku:0;
+    return`<div class="year-card"><div class="year-card-title">${yi+1}년차 (${yi*12+1}~${Math.min((yi+1)*12,period)}개월)</div>
+      <div class="yr"><span class="yr-l">신제품 사입</span><span class="yr-v" style="color:var(--accent);">${fmtM(yNI)}원</span></div>
+      <div class="yr"><span class="yr-l">신제품 SKU</span><span class="yr-v" style="color:var(--accent);">${yNSku.toLocaleString()}개 (월평균 ${Math.round(yNSku/ym.length)}개)</span></div>
+      <div class="yr"><span class="yr-l">리오더 사입</span><span class="yr-v" style="color:var(--accent2);">${fmtM(yRI)}원</span></div>
+      <div class="yr"><span class="yr-l">리오더 SKU</span><span class="yr-v" style="color:var(--accent2);">${yRSku.toLocaleString()}개 (월평균 ${Math.round(yRSku/ym.length)}개)</span></div>
+      <div class="yr"><span class="yr-l">총 SKU</span><span class="yr-v" style="color:var(--purple);">${yTSku.toLocaleString()}개</span></div>
+      <div class="yr"><span class="yr-l">총 투자</span><span class="yr-v" style="color:var(--red);">${fmtM(yI)}원</span></div>
+      <div class="yr"><span class="yr-l">예상 매출</span><span class="yr-v" style="color:#6c8fff;">${fmtM(yR)}원</span></div>
+      <div class="yr"><span class="yr-l">SKU당 매출</span><span class="yr-v" style="color:var(--purple);">${fmtM(ySkuRev)}원</span></div>
+      <div class="yr"><span class="yr-l">연간 손익</span><span class="yr-v ${yP>=0?'pos':'neg'}">${fmtM(yP)}원</span></div>
+    </div>`;
+  }).join('');
+
+  // ROI 카드
+  const maxYr2=Math.ceil(period/12);
+  document.getElementById('roiGrid').innerHTML=Array.from({length:maxYr2},(_,yi)=>{
+    const ym=months.filter(m=>m.yr===yi+1);
+    const yI=ym.reduce((s,m)=>s+m.tI+m.opex,0);
+    const yR=ym.reduce((s,m)=>s+m.tR,0);
+    const yP=ym.reduce((s,m)=>s+m.mP,0);
+    const roi=yI>0?yP/yI*100:0;
+    const annualRoi=roi; // 이미 연간 기준
+    return`<div class="roi-card">
+      <div class="roi-label">${yi+1}년차 연간 수익률 (ROI)</div>
+      <div class="roi-value" style="color:${roi>=0?'var(--green)':'var(--red)'};">${roi.toFixed(1)}%</div>
+      <div class="roi-sub">투자 ${fmtM(yI)}원 → 손익 ${fmtM(yP)}원</div>
+    </div>`;
+  }).join('')+`<div class="roi-card" style="--kpi-color:var(--purple);">
+    <div class="roi-label">전체 기간 평균 ROI</div>
+    <div class="roi-value" style="color:${last.cumP>=0?'var(--green)':'var(--red)'};">${(last.cumI>0?last.cumP/last.cumI*100:0).toFixed(1)}%</div>
+    <div class="roi-sub">총 투자 ${fmtM(last.cumI)}원 → 누적 손익 ${fmtM(last.cumP)}원</div>
+  </div>`;
+
+  const lb=months.map(m=>m.m+'개월');
+  const to={callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}};
+
+  mc('cCum',{type:'line',data:{labels:lb,datasets:[
+    {label:'누적 투자금',data:months.map(m=>m.cumI),borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2},
+    {label:'누적 매출',data:months.map(m=>m.cumR),borderColor:'#6c8fff',backgroundColor:'rgba(108,143,255,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2},
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:to.callbacks}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+
+  const pd=months.map(m=>m.cumP);
+  mc('cPnl',{type:'bar',data:{labels:lb,datasets:[{data:pd,backgroundColor:pd.map(v=>v>=0?'rgba(74,222,128,.5)':'rgba(248,113,113,.4)'),borderColor:pd.map(v=>v>=0?'#4ade80':'#f87171'),borderWidth:1,borderRadius:2}]},options:{plugins:{tooltip:{callbacks:to}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+
+  mc('cInvest',{type:'bar',data:{labels:lb,datasets:[
+    {label:'신제품',data:months.map(m=>m.nI),backgroundColor:'rgba(108,143,255,.6)',borderRadius:2},
+    {label:'리오더',data:months.map(m=>m.rI),backgroundColor:'rgba(78,205,196,.6)',borderRadius:2},
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:to}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+
+  mc('cRev',{type:'line',data:{labels:lb,datasets:[
+    {label:'신제품 매출',data:months.map(m=>m.nR),borderColor:'#6c8fff',tension:.3,pointRadius:2,borderWidth:2,fill:false},
+    {label:'리오더 매출',data:months.map(m=>m.rR),borderColor:'#4ecdc4',tension:.3,pointRadius:2,borderWidth:2,fill:false},
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:to}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+
+  let pYr=0;
+  document.getElementById('stbl').innerHTML=months.map(m=>{
+    let sep='';
+    if(m.yr!==pYr){sep=`<tr class="yr-sep"><td colspan="9">── ${m.yr}년차 (${(m.yr-1)*12+1}~${Math.min(m.yr*12,period)}개월) ──</td></tr>`;pYr=m.yr;}
+    return sep+`<tr class="${m.isBE?'be-row':''}">
+      <td>${m.m}개월차 ${m.isBE?'🟢':''}</td>
+      <td style="color:var(--accent);">${fmtM(m.nI)}원</td>
+      <td style="color:var(--accent);">${m.nSku.toLocaleString()}개</td>
+      <td style="color:var(--accent2);">${fmtM(m.rI)}원</td>
+      <td style="color:var(--accent2);">${m.rSku.toLocaleString()}개</td>
+      <td style="color:var(--red);">${m.opex>0?fmtM(m.opex)+'원':'-'}</td>
+      <td style="color:var(--purple);">${m.extra>0?fmtM(m.extra)+'원':'-'}</td>
+      <td style="color:#6c8fff;">${fmtM(m.tR)}원</td>
+      <td style="color:var(--purple);">${fmtM(m.skuRev)}원</td>
+      <td class="${m.mP>=0?'pos':'neg'}">${fmtM(m.mP)}원</td>
+      <td class="${m.cumP>=0?'pos':'neg'}" style="font-weight:${m.isBE?700:400};">${fmtM(m.cumP)}원</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('rp').scrollIntoView({behavior:'smooth',block:'start'});
+}
+updatePreview();
+</script>
+</body>
+</html>
