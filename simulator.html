@@ -50,18 +50,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .bb-icon{font-size:28px;}
 .bb-title{font-size:16px;font-weight:700;}
 .bb-sub{font-size:12px;color:var(--text2);margin-top:3px;}
-.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 .kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent));}
 .kpi-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
 .kpi-value{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--kpi-color,var(--text));}
 .kpi-sub{font-size:10px;color:var(--text3);margin-top:4px;}
-.year-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;}
+.year-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
 .year-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;}
 .year-card-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.total-card{background:var(--bg3);border:2px solid rgba(108,143,255,.35);border-radius:10px;padding:18px;margin-bottom:20px;}
-.total-card-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(108,143,255,.2);}
-.total-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .yr{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
 .yr-l{color:var(--text3);}
 .yr-v{font-family:var(--mono);font-weight:500;}
@@ -103,8 +100,118 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .opex-input{background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:var(--amber);font-family:var(--mono);outline:none;width:120px;transition:border-color .15s;}
 .opex-input:focus{border-color:var(--amber);}
 </style>
+<style>
+.login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
+.login-logo-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;text-align:center;}
+.login-title{font-size:22px;font-weight:700;margin-bottom:4px;text-align:center;}
+.login-sub{font-size:12px;color:var(--text2);margin-bottom:24px;text-align:center;}
+.login-field{margin-bottom:14px;}
+.login-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.login-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
+.login-input:focus{border-color:var(--accent);}
+.login-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
+</style>
 </head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.sim-login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.sim-login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
+.sim-field{margin-bottom:14px;}
+.sim-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.sim-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
+.sim-input:focus{border-color:var(--accent);}
+.sim-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
+.sim-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
+</style>
+<div class="sim-login-overlay" id="simLoginOverlay">
+  <div class="sim-login-box">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;">B2B · SIMULATOR</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:4px;">투자 시뮬레이터</div>
+      <div style="font-size:12px;color:var(--text2);">PREMIUM 전용 서비스입니다</div>
+    </div>
+    <div class="sim-field">
+      <div class="sim-label">이메일</div>
+      <input type="email" class="sim-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')simLogin()">
+    </div>
+    <div class="sim-field">
+      <div class="sim-label">비밀번호</div>
+      <input type="password" class="sim-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')simLogin()">
+    </div>
+    <button class="sim-btn" onclick="simLogin()">로그인</button>
+    <div class="sim-err" id="simErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.sim-login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.sim-login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
+.sim-login-logo{text-align:center;margin-bottom:24px;}
+.sim-login-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;}
+.sim-login-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+.sim-login-sub{font-size:12px;color:var(--text2);}
+.sim-field{margin-bottom:14px;}
+.sim-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.sim-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
+.sim-input:focus{border-color:var(--accent);}
+.sim-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
+.sim-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
+</style>
+<div class="sim-login-overlay" id="simLoginOverlay">
+  <div class="sim-login-box">
+    <div class="sim-login-logo">
+      <div class="sim-login-mark">B2B · SIMULATOR</div>
+      <div class="sim-login-title">투자 시뮬레이터</div>
+      <div class="sim-login-sub">PREMIUM 전용 서비스입니다</div>
+    </div>
+    <div class="sim-field">
+      <div class="sim-label">이메일</div>
+      <input type="email" class="sim-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')simLogin()">
+    </div>
+    <div class="sim-field">
+      <div class="sim-label">비밀번호</div>
+      <input type="password" class="sim-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')simLogin()">
+    </div>
+    <button class="sim-btn" onclick="simLogin()">로그인</button>
+    <div class="sim-err" id="simErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- 로그인 오버레이 -->
+<div class="login-overlay" id="simLoginOverlay">
+  <div class="login-box">
+    <div class="login-logo-mark">B2B · SIMULATOR</div>
+    <div class="login-title">투자 시뮬레이터</div>
+    <div class="login-sub">PREMIUM 멤버 전용 서비스입니다</div>
+    <div class="login-field">
+      <div class="login-label">이메일</div>
+      <input type="email" class="login-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')simLogin()">
+    </div>
+    <div class="login-field">
+      <div class="login-label">비밀번호</div>
+      <input type="password" class="login-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')simLogin()">
+    </div>
+    <button class="login-btn" onclick="simLogin()">로그인</button>
+    <div class="login-err" id="simLoginErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div class="login-overlay" id="simLoginOverlay">
+  <div class="login-box">
+    <div class="login-logo-mark">B2B · SIMULATOR</div>
+    <div class="login-title">투자 시뮬레이터</div>
+    <div class="login-sub">PREMIUM 멤버 전용 서비스입니다</div>
+    <div class="login-field"><div class="login-label">이메일</div><input type="email" class="login-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')simLogin()"></div>
+    <div class="login-field"><div class="login-label">비밀번호</div><input type="password" class="login-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')simLogin()"></div>
+    <button class="login-btn" onclick="simLogin()">로그인</button>
+    <div class="login-err" id="simLoginErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
 <div class="header">
   <div><div class="header-title">📊 B2B 사입 투자 수익 시뮬레이터</div><div class="header-sub">실제 운영 데이터(2023~2025년, 37개월) 패턴 완전 반영</div></div>
   <span class="badge">실데이터 기반</span>
@@ -129,9 +236,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </div>
         <div class="info-box">
           실제 데이터 기반 리오더 자동 적용<br>
-          • 1년차 리오더: <span class="v-blue" id="re1">-</span> (x4.85배)<br>
-          • 2년차 리오더: <span class="v-teal" id="re2">-</span> (x13.7배 → 점진 증가)<br>
-          • 3년차 리오더: <span class="v-amber" id="re3">-</span> (x22.0배 → 신규창업 정상성장 기준)
+          • 1년차 리오더: <span class="v-blue" id="re1">-</span> (x5.5배)<br>
+          • 2년차 리오더: <span class="v-teal" id="re2">-</span> (x14.2배)<br>
+          • 3년차 리오더: <span class="v-amber" id="re3">-</span> (x2.3배)
         </div>
         <div class="info-box" style="margin-top:8px;">
           <strong style="color:var(--text);display:block;margin-bottom:4px;">📦 예상 월 사입 SKU 수</strong>
@@ -139,7 +246,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <table style="width:100%;font-size:11px;border-collapse:collapse;">
             <tr style="color:var(--text3);"><td style="padding:2px 6px;">구분</td><td style="padding:2px 6px;text-align:right;">1년차</td><td style="padding:2px 6px;text-align:right;">2년차</td><td style="padding:2px 6px;text-align:right;">3년차</td><td style="padding:2px 6px;text-align:right;color:var(--amber);">평균</td></tr>
             <tr style="border-top:0.5px solid var(--border);"><td style="padding:3px 6px;color:var(--text2);">신제품 단가</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">2.1만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">1.9만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">1.8만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);">2.0만원</td></tr>
-            <tr style="border-top:0.5px solid var(--border);"><td style="padding:3px 6px;color:var(--text2);">리오더 단가</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">5.8만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">6.9만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">8.6만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);">7.1만원</td></tr>
+            <tr style="border-top:0.5px solid var(--border);"><td style="padding:3px 6px;color:var(--text2);">리오더 단가</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">6.6만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">7.1만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);">0.6만원</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);">4.2만원</td></tr>
             <tr style="border-top:0.5px solid var(--border);background:rgba(108,143,255,.05);"><td style="padding:3px 6px;color:var(--accent);">신제품 SKU</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent);" id="sku_n1">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent);" id="sku_n2">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent);" id="sku_n3">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);" id="sku_na">-</td></tr>
             <tr style="border-top:0.5px solid var(--border);background:rgba(78,205,196,.05);"><td style="padding:3px 6px;color:var(--accent2);">리오더 SKU</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent2);" id="sku_r1">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent2);" id="sku_r2">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--accent2);" id="sku_r3">-</td><td style="padding:3px 6px;text-align:right;font-family:var(--mono);color:var(--amber);" id="sku_ra">-</td></tr>
           </table>
@@ -157,19 +264,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <strong style="color:var(--text);display:block;margin-bottom:2px;">실제 운영 패턴 (조영유통 기준)</strong>
           • 1년차 매출/사입: <span class="v-blue">0.80배</span> — 적자 구간<br>
           • 2년차 매출/사입: <span class="v-teal">1.43배</span> — 손익 근접<br>
-          • 3년차 매출/사입: <span class="v-amber">3.20배</span> — 흑자 전환<br>
+          • 3년차 매출/사입: <span class="v-amber">18.96배</span> — 흑자 전환<br>
           • 실제 손익분기: <span class="v-green">37개월차</span><br>
-          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
-            <strong style="color:var(--text);display:block;margin-bottom:4px;">📊 순수 제품마진율 (연도별 실측)</strong>
-            • 1년차: <span class="v-blue">45.1%</span> &nbsp;
-            • 2년차: <span class="v-teal">46.7%</span> &nbsp;
-            • 3년차: <span class="v-amber">48.4%</span><br>
-            • 전체 평균: <span class="v-green">46.7%</span> — 배송비 백마진 미포함
-          </div>
-          <div style="margin-top:8px;padding:7px 10px;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:6px;font-size:10px;color:var(--text3);line-height:1.8;">
-            💡 <span style="color:var(--purple);font-weight:500;">배송비 백마진 참고</span> — 출고량에 따라 <strong style="color:var(--text2);">+4~8%</strong> 추가 수익 가능<br>
-            단, 초기 1년은 출고량이 적어 백마진 효과 미미 → 시뮬레이션 미반영
-          </div>
+          • 신제품 마진율 <span class="v-blue">46.7%</span> / 리오더 <span class="v-teal">47.5%</span>
         </div>
       </div>
     </div>
@@ -182,23 +279,23 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <div class="pct-btns">
             <button class="pct-btn" onclick="setReinvest(30)">30%</button>
             <button class="pct-btn" onclick="setReinvest(50)">50%</button>
-            <button class="pct-btn" onclick="setReinvest(70)">70%</button>
-            <button class="pct-btn active" onclick="setReinvest(100)">100%</button>
+            <button class="pct-btn active" onclick="setReinvest(70)">70%</button>
+            <button class="pct-btn" onclick="setReinvest(100)">100%</button>
             <button class="pct-btn" onclick="setReinvest('custom')" id="customPctBtn">직접입력</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <input type="number" id="reinvestPct" value="100" min="0" max="100" style="background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:16px;font-weight:600;color:var(--purple);font-family:var(--mono);outline:none;width:90px;" oninput="updateGuide()">
+            <input type="number" id="reinvestPct" value="70" min="0" max="100" style="background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:16px;font-weight:600;color:var(--purple);font-family:var(--mono);outline:none;width:90px;" oninput="updateGuide()">
             <span style="font-size:13px;color:var(--text2);">% 재투자</span>
           </div>
           <div class="guide-box" id="guideBox">
-            💡 <strong style="color:var(--text);">100% 재투자</strong> — 수익 전액 재투자. 생활비·운영비 별도. 최대 성장 속도<br>
-            수익의 100%를 다시 사입에 투자
+            💡 <strong style="color:var(--text);">70% 재투자</strong> — 운영비 일부 충당하면서 성장<br>
+            수익의 70%를 다시 사입에 투자, 30%는 운영비/생활비로 활용
           </div>
         </div>
         <div>
           <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">월 고정 운영비 (선택)</div>
           <div class="opex-wrap">
-            <input type="number" class="opex-input" id="opexAmt" value="150" min="0" placeholder="0">
+            <input type="number" class="opex-input" id="opexAmt" value="0" min="0" placeholder="0">
             <span style="font-size:13px;color:var(--text2);">만원 / 월</span>
           </div>
           <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.8;">
@@ -216,10 +313,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
   <div class="result-panel" id="rp">
     <div id="bbanner"></div>
-    <div id="reinvestNotice"></div>
     <div class="kpi-grid" id="rkpi"></div>
     <div class="year-grid" id="ygrid"></div>
-    <div id="totalCard"></div>
     <div class="roi-grid" id="roiGrid"></div>
     <div class="cg2">
       <div class="cc"><div class="ct">📈 누적 투자금 vs 누적 매출</div><div class="cw" style="height:240px;"><canvas id="cCum"></canvas></div></div>
@@ -232,7 +327,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="tc">
       <div class="th2"><span>월별 상세 시뮬레이션</span><span style="font-size:11px;color:var(--text3);">🟢 손익분기 달성월</span></div>
       <div class="tw"><table>
-        <thead><tr><th>월차</th><th>신제품사입</th><th>신제품SKU</th><th>리오더사입</th><th>리오더SKU</th><th>운영비</th><th>🔴자본투입</th><th>🟢재투자충당</th><th>예상매출</th><th>SKU당매출</th><th>월출고</th><th>일출고</th><th>👤1인운영</th><th>📦추정재고자산</th><th>월손익</th><th>누적손익</th></tr></thead>
+        <thead><tr><th>월차</th><th>신제품사입</th><th>신제품SKU</th><th>리오더사입</th><th>리오더SKU</th><th>운영비</th><th>재투자금</th><th>예상매출</th><th>SKU당매출</th><th>월손익</th><th>누적손익</th></tr></thead>
         <tbody id="stbl"></tbody>
       </table></div>
     </div>
@@ -240,8 +335,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <strong>⚠ 참고사항</strong><br>
       본 시뮬레이터는 실제 B2B 운영 데이터(2023~2025년, 37개월)의 패턴을 그대로 적용한 추정값입니다.<br>
       • <strong>임대료·인건비·배송비 등 운영비는 포함되지 않습니다</strong> — 개인별 환경이 다르므로 별도 고려 필요<br>
-      • 리오더 비율 실측 적용 (1년차 485%, 2년차 1372%→월별 보간, 3년차 2200%→신규창업 정상성장 기준) — 시트4 기준<br>
-      • 배송비 백마진(+4~8%)은 출고량에 따라 추가 수익 가능하나 초기 1년은 효과 미미 — 별도 고려 필요<br>
+      • 리오더 비율은 실제 데이터 자동 적용 (1년차 548%, 2년차 1415%, 3년차 228%)<br>
       • 실제 수익은 상품 경쟁력·플랫폼 수수료·시장 상황에 따라 달라질 수 있습니다
     </div>
   </div>
@@ -249,47 +343,14 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <script>
 const REAL={
-  // ── 실제 운영 데이터 기반 (시트4 신제품_리오더_카운팅.xlsx) ──
-  //
-  // reRatio: 연도별 리오더/신제품 사입금 비율 (연간 평균 / 월별 보간 적용)
-  //
-  // 1년차 4.85배  → 실측값 그대로 적용
-  // 2년차 13.72배 → 실측값 그대로 적용
-  //
-  // 3년차 20.00배 → 실측값(34.73배) 대신 조정값 적용
-  //   [실측 34.73배가 나온 이유 - 3년차 특수 운영 상황]
-  //   - 2년간 누적 재고가 충분히 쌓인 상태
-  //   - 창고 공간 포화로 신규 입고 여력 제한
-  //   - 자금흐름 조정을 위해 신제품 사입 의도적으로 축소
-  //   - 기존 재고 기반 리오더에 집중 운영
-  //   - 신제품을 늘리면 리오더도 같이 늘어 지속적 자금 투입이 필요한 구조적 특성
-  //
-  //   [신규 창업자 3년차는 다른 상황]
-  //   - 재고가 이제 막 쌓이기 시작하는 단계
-  //   - 창고 공간 여유 있음
-  //   - 정상적인 신제품 + 리오더 병행 운영
-  //   - 재투자로 점진적 자금 성장 중
-  //
-  //   [20배 근거]
-  //   - 2년차(13.72배)에서 자연 성장한 수준
-  //   - 실제 운영 정상 구간(1~2년차 하반기) 월별 비율 평균 10~20배
-  //   - 34.73배는 특수 운영 상황이므로 신규 창업 시뮬레이션 적용 부적합
-  reRatio:{1:4.85, 2:13.72, 3:20.00},
-  // revRatio: 참고용 보존
-  revRatio:{1:0.80, 2:1.43, 3:3.20},
+  reRatio:{1:5.48,2:14.15,3:2.28},
+  revRatio:{1:0.80,2:1.43,3:18.96},
   wt:[0.04,0.06,0.09,0.14,0.22,0.32,0.44,0.57,0.68,0.76,0.83,0.88,0.92,0.95,0.97,0.98,0.99,1.00],
-  // 순수 제품마진율 (연도별 실측 / 배송비 백마진 미포함)
-  // ※ 배송비 백마진은 출고량에 따라 +4~8% 추가 수익 가능 (초기 1년은 미미)
-  newM:{1:0.4506, 2:0.4673, 3:0.4844}, // 1년차 45.06% / 2년차 46.73% / 3년차 48.44%
-  reM: {1:0.4506, 2:0.4673, 3:0.4844},
-  // 사입 100만원당 월 출고수 (실제 데이터 기반)
-  // 1인 운영 기준: 일 100개 이하 ✅ / 100~200개 ⚠️ / 200개 초과 ❌
-  shipPerM:{1:88, 2:154, 3:195},
-  workDays:25,
-  // 연도별 사입 단가 (시트4 실측)
-  newUnit:{1:20976, 2:19085, 3:17696}, // 신제품 단가
-  reUnit:{1:58107, 2:69149, 3:85894},  // 리오더 단가 (시트4 실측)
-  avgNewUnit:19252, avgReUnit:71050,
+  newM:0.467, reM:0.475,
+  // 연도별 SKU 단가 (실제 데이터)
+  newUnit:{1:20976,2:19085,3:17696}, // 신제품 사입단가
+  reUnit:{1:65661,2:71324,3:5647},   // 리오더 사입단가
+  avgNewUnit:19705, avgReUnit:42035,  // 전체 평균
   guides:{
     0:  {title:'재투자 없음',     desc:'수익을 전혀 재투자하지 않음. 순수 초기 투자금만으로 운영'},
     30: {title:'보수적 재투자',   desc:'수익의 30%만 재투자. 현금 확보 우선, 안정적 운영 선호'},
@@ -313,7 +374,7 @@ function setPeriod(m){
   period=m;
   document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('active',b.textContent===m/12+'년'));
 }
-let reinvestPct = 100;
+let reinvestPct = 70;
 function setReinvest(v){
   if(v==='custom'){
     document.getElementById('reinvestPct').focus();
@@ -372,110 +433,42 @@ function runSim(){
   const rPct=(parseInt(document.getElementById('reinvestPct').value)||0)/100;
   const opex=(parseFloat(document.getElementById('opexAmt').value)||0)*10000;
   const months=[];
-  let cumI=0,cumR=0,cumP=0,cumCapital=0,beMonth=-1;
-  let reinvestPool=0; // 전월 수익에서 적립된 재투자 가용 풀
+  let cumI=0,cumR=0,cumP=0,beMonth=-1;
+  let extraInvest=0; // 재투자 누적금
   const nH=[],rH=[];
-
-  // 연도 전환 급등 방지: reRatio 월별 선형 보간
-  function getReRatio(m){
-    if(m<=12) return REAL.reRatio[1];
-    if(m<=24){ const t=(m-12)/12; return REAL.reRatio[1]+(REAL.reRatio[2]-REAL.reRatio[1])*t; }
-    const t=(m-24)/12; return REAL.reRatio[2]+(REAL.reRatio[3]-REAL.reRatio[2])*t;
-  }
 
   for(let m=1;m<=period;m++){
     const yr=Math.min(Math.ceil(m/12),3);
-    const reRatioM=getReRatio(m);
+    // 재투자분을 신제품에 추가
+    const nAmt=nAmtBase+extraInvest;
+    const nI=nAmt, rI=nAmt*REAL.reRatio[yr], tI=nI+rI;
+    nH.push(nI);rH.push(rI);
 
-    // ── 이달 필요 사입금 계산 ──
-    const nINeed=nAmtBase;           // 신제품 목표 사입금 (항상 고정)
-    const rINeed=nAmtBase*reRatioM;  // 리오더 목표 사입금 (신제품 기준금에 비율 적용)
-    const tINeed=nINeed+rINeed;
-
-    // ── 재투자풀로 사입비 대체 (우선순위: 신제품 → 리오더) ──
-    let pool=reinvestPool; // 이달 사용 가능한 재투자 풀
-    reinvestPool=0;        // 풀 소진 (매월 리셋)
-
-    // 1순위: 신제품 사입비 충당
-    const nFromPool=Math.min(pool, nINeed);
-    pool-=nFromPool;
-    const nCapital=nINeed-nFromPool;   // 신제품에 실제 자본금 투입액
-
-    // 2순위: 리오더 사입비 충당 (신제품 충당 후 남은 풀 사용)
-    const rFromPool=Math.min(pool, rINeed);
-    pool-=rFromPool;
-    const rCapital=rINeed-rFromPool;   // 리오더에 실제 자본금 투입액
-
-    // 실제 사입금 (목표액과 동일 — 재원만 다름)
-    const nI=nINeed;
-    const rI=rINeed;
-    const tI=tINeed;
-    const capitalIn=nCapital+rCapital; // 이달 실제 외부 자본 투입액
-
-    nH.push(nI); rH.push(rI);
-
-    // ── 매출 계산 (wt 가중치 기반 누적 매출 인식 / 연도별 순수 제품마진 적용) ──
     let nR=0;
     for(let i=0;i<nH.length;i++){
       const age=nH.length-1-i;
       const wi=Math.min(age,REAL.wt.length-1);
       const pw=wi>0?REAL.wt[wi-1]:0;
-      const iYr=Math.min(Math.ceil((m-age)/12)||1,3); // 해당 사입이 발생한 연도
-      const mRate=REAL.newM[Math.max(1,iYr)];
-      nR+=nH[i]*(REAL.wt[wi]-pw)*(1+mRate);
+      nR+=nH[i]*(REAL.wt[wi]-pw)*(1+REAL.newM);
     }
     let rR=0;
     for(let i=0;i<rH.length;i++){
       const age=rH.length-1-i;
       const wi=Math.min(age*2,REAL.wt.length-1);
       const pwi=Math.max(0,wi-2);
-      const iYr=Math.min(Math.ceil((m-age)/12)||1,3);
-      const mRate=REAL.reM[Math.max(1,iYr)];
-      rR+=rH[i]*Math.max(0,REAL.wt[wi]-REAL.wt[pwi])*(1+mRate);
+      rR+=rH[i]*Math.max(0,REAL.wt[wi]-REAL.wt[pwi])*(1+REAL.reM);
     }
     const tR=nR+rR;
-    const mP=tR-tI-opex;
-    const mProfit=Math.max(0,mP);
-
-    // 수익의 rPct% → 다음달 재투자 풀로 적립 (사입비 대체에만 사용)
-    reinvestPool=mProfit*rPct;
-
-    cumI+=tI+opex;
-    cumR+=tR;
-    cumP+=mP;
-    cumCapital+=capitalIn+opex; // 실제 누적 자본 투입액
+    const mP=tR-tI-opex; // 운영비 차감
+    const mProfit=Math.max(0,mP); // 실제 수익 (마이너스면 0으로)
+    extraInvest=mProfit*rPct; // 다음달 재투자금
+    cumI+=tI+opex;cumR+=tR;cumP+=mP;
     if(beMonth<0&&cumP>=0)beMonth=m;
-
     const nSku=Math.round(nI/REAL.newUnit[yr]);
     const rSku=Math.round(rI/REAL.reUnit[yr]);
     const totSku=nSku+rSku;
     const skuRev=totSku>0?tR/totSku:0;
-
-    // 월 출고량 계산
-    const yrCapped=Math.min(Math.max(yr,1),3);
-    const monthlyShip=Math.round(tI/1000000*REAL.shipPerM[yrCapped]);
-    const dailyShip=Math.round(monthlyShip/REAL.workDays);
-    const soloStatus=dailyShip<=100?'✅':dailyShip<=200?'⚠️':'❌';
-    const soloLabel=dailyShip<=100?'1인 가능':dailyShip<=200?'1인 주의':'인력 필요';
-
-    // 추정 재고자산 = 누적사입금 - 누적매출원가
-    // 매출원가 = 매출 × (1 - 마진율)
-    // ※ 실제 재고는 상품별 회전율·반품·손실에 따라 다를 수 있음
-    const mRate=REAL.newM[yrCapped];
-    const cumCost=cumR*(1-mRate); // 누적 매출원가 (근사)
-    const estInv=Math.max(0, cumI - cumCost); // 추정 재고자산 (음수 방지)
-
-    months.push({m,yr:Math.ceil(m/12),
-      nI,rI,tI,nR,rR,tR,mP,opex,
-      capitalIn,
-      nFromPool,rFromPool,
-      cumI,cumR,cumP,cumCapital,
-      nSku,rSku,totSku,skuRev,
-      poolUsed:nFromPool+rFromPool,
-      reinvestPool, // 이달 수익 → 다음달 이월금
-      monthlyShip,dailyShip,soloStatus,soloLabel,
-      estInv,
-      isBE:beMonth===m});
+    months.push({m,yr:Math.ceil(m/12),nI,rI,tI,nR,rR,tR,mP,opex,cumI,cumR,cumP,nSku,rSku,totSku,skuRev,extra:extraInvest,isBE:beMonth===m});
   }
 
   document.getElementById('rp').classList.add('show');
@@ -489,32 +482,12 @@ function runSim(){
     bb.innerHTML=`<div class="bb bb-red"><div class="bb-icon">⏳</div><div><div class="bb-title" style="color:var(--red);">${period}개월 내 손익분기 미달성</div><div class="bb-sub">3년 기간으로 늘리거나 투자금을 조정해보세요</div></div></div>`;
   }
 
-  // 재투자 구조 안내 박스
-  const reinvestPctVal=Math.round(rPct*100);
-  const cashProfit=reinvestPctVal<100
-    ? `수익의 <strong style="color:var(--green);">${100-reinvestPctVal}%</strong>는 현금으로 보유 — 월 실수령 수익 발생`
-    : `수익 <strong style="color:var(--amber);">전액 재투자</strong> 중 — 손익분기(${beMonth>0?beMonth+'개월차':'미달성'}) 전까지 현금 수익 없음`;
-  document.getElementById('reinvestNotice').innerHTML=`
-  <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:12px;line-height:2;color:var(--text2);">
-    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">💡 재투자 구조 이해</div>
-    <div>• <strong style="color:var(--text);">수익 재투자 충당</strong> = 전달 수익으로 이달 사입비를 대체한 금액 → <span style="color:var(--amber);">외부 자본 절감 효과 (손에 쥔 현금 아님)</span></div>
-    <div>• <strong style="color:var(--text);">연간 손익 적자</strong> = 실제 손실이 아님 → <span style="color:var(--accent);">미판매 재고(추정 재고자산)로 창고에 보관 중, 판매 시 수익 전환</span></div>
-    <div>• ${cashProfit}</div>
-    ${reinvestPctVal===100?`<div style="margin-top:6px;padding:6px 10px;background:rgba(251,191,36,.07);border-radius:6px;color:var(--amber);">
-      ⚠️ 재투자 100% 조건에서는 손익분기 달성 전까지 현금 수익이 발생하지 않습니다.<br>
-      재투자 비율을 낮추면(예: 70%) 수익의 30%를 매달 현금으로 확보할 수 있습니다.
-    </div>`:''}
-  </div>`;
-
   // KPI
-  const avgMonthlyCapital=last.cumCapital/period; // 전체 월평균 실투입 자본
   document.getElementById('rkpi').innerHTML=[
-    {label:`실제 자본 투입 (${period}개월)`,val:fmtM(last.cumCapital)+'원',color:'#f87171',sub:'수익 충당분 제외한 순 외부 투입'},
-    {label:`총 사입금 (${period}개월)`,val:fmtM(last.cumI)+'원',color:'#fbbf24',sub:'신제품+리오더 합산 (재원 무관)'},
+    {label:`총 투자금 (${period}개월)`,val:fmtM(last.cumI)+'원',color:'#f87171',sub:'신제품+리오더 합산'},
     {label:'총 예상 매출',val:fmtM(last.cumR)+'원',color:'#6c8fff',sub:'마진 포함 판매가 기준'},
     {label:'누적 손익',val:fmtM(last.cumP)+'원',color:last.cumP>=0?'#4ade80':'#f87171',sub:last.cumP>=0?'✅ 흑자':'📉 적자'},
     {label:'손익분기',val:beMonth>0?beMonth+'개월':'미달성',color:beMonth>0?'#4ade80':'#f87171',sub:beMonth>0?`${Math.ceil(beMonth/12)}년차 달성`:`${period}개월 초과`},
-    {label:'월평균 실투입 자본',val:fmtM(avgMonthlyCapital)+'원',color:'#a78bfa',sub:`신제품+리오더+운영비 ÷ ${period}개월`},
   ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
 
   // 연도별 요약
@@ -530,148 +503,18 @@ function runSim(){
     const yRSku=ym.reduce((s,m)=>s+m.rSku,0);
     const yTSku=yNSku+yRSku;
     const ySkuRev=yTSku>0?yR/yTSku:0;
-    const yCapital=ym.reduce((s,m)=>s+m.capitalIn,0);
-    const yPoolUsed=ym.reduce((s,m)=>s+m.poolUsed,0);
-    // 연간 발생 수익 = 재투자 충당 + 연도 마지막달 이월금
-    const yLastPool=ym[ym.length-1].reinvestPool||0;
-    const yTotalProfit=yPoolUsed+yLastPool; // 재투자충당 + 다음달 이월 = 연간 발생 수익
-    const yShip=ym.reduce((s,m)=>s+m.monthlyShip,0);
-    const yDailyShip=Math.round(yShip/ym.length/REAL.workDays);
-    const ySoloStatus=yDailyShip<=100?'✅':yDailyShip<=200?'⚠️':'❌';
-    const ySoloLabel=yDailyShip<=100?'1인 가능':yDailyShip<=200?'1인 주의':'인력 필요';
-    // 연도말 추정 재고자산 (해당 연도 마지막 달 값)
-    const yLastEstInv=ym[ym.length-1].estInv;
     return`<div class="year-card"><div class="year-card-title">${yi+1}년차 (${yi*12+1}~${Math.min((yi+1)*12,period)}개월)</div>
       <div class="yr"><span class="yr-l">신제품 사입</span><span class="yr-v" style="color:var(--accent);">${fmtM(yNI)}원</span></div>
       <div class="yr"><span class="yr-l">신제품 SKU</span><span class="yr-v" style="color:var(--accent);">${yNSku.toLocaleString()}개 (월평균 ${Math.round(yNSku/ym.length)}개)</span></div>
       <div class="yr"><span class="yr-l">리오더 사입</span><span class="yr-v" style="color:var(--accent2);">${fmtM(yRI)}원</span></div>
       <div class="yr"><span class="yr-l">리오더 SKU</span><span class="yr-v" style="color:var(--accent2);">${yRSku.toLocaleString()}개 (월평균 ${Math.round(yRSku/ym.length)}개)</span></div>
       <div class="yr"><span class="yr-l">총 SKU</span><span class="yr-v" style="color:var(--purple);">${yTSku.toLocaleString()}개</span></div>
-      <div class="yr"><span class="yr-l">총 사입금</span><span class="yr-v" style="color:var(--red);">${fmtM(yI)}원</span></div>
-      <div class="yr" style="border-top:0.5px solid var(--border);margin-top:6px;padding-top:6px;"><span class="yr-l">🔴 실제 자본 투입</span><span class="yr-v" style="color:var(--red);">${fmtM(yCapital)}원</span></div>
-      <div class="yr"><span class="yr-l">🟢 수익 재투자 충당</span><span class="yr-v" style="color:var(--green);">${fmtM(yPoolUsed)}원</span></div>
+      <div class="yr"><span class="yr-l">총 투자</span><span class="yr-v" style="color:var(--red);">${fmtM(yI)}원</span></div>
       <div class="yr"><span class="yr-l">예상 매출</span><span class="yr-v" style="color:#6c8fff;">${fmtM(yR)}원</span></div>
       <div class="yr"><span class="yr-l">SKU당 매출</span><span class="yr-v" style="color:var(--purple);">${fmtM(ySkuRev)}원</span></div>
       <div class="yr"><span class="yr-l">연간 손익</span><span class="yr-v ${yP>=0?'pos':'neg'}">${fmtM(yP)}원</span></div>
-      <div class="yr" style="background:rgba(108,143,255,.06);border-radius:6px;padding:5px 8px;margin-top:2px;">
-        <span class="yr-l" style="color:var(--accent);">💰 연간 발생 수익</span>
-        <span class="yr-v" style="color:var(--accent);font-weight:700;">${fmtM(yTotalProfit)}원</span>
-      </div>
-      <div style="font-size:10px;color:var(--text3);line-height:1.7;padding:4px 8px;">
-        재투자 충당 ${fmtM(yPoolUsed)}원 + 이월 ${fmtM(yLastPool)}원
-      </div>
-      <div class="yr" style="border-top:0.5px solid var(--border);margin-top:6px;padding-top:6px;background:rgba(251,191,36,.04);border-radius:6px;padding:6px 8px;">
-        <span class="yr-l" style="color:var(--amber);">📦 연말 추정 재고자산</span>
-        <span class="yr-v" style="color:var(--amber);">${fmtM(yLastEstInv)}원</span>
-      </div>
-      ${yP<0?`<div style="font-size:10px;color:var(--text3);margin-top:4px;line-height:1.7;padding:6px 8px;background:rgba(251,191,36,.04);border-radius:6px;">
-        💡 손익 ${fmtM(yP)}원 적자는 실제 손실이 아닙니다<br>
-        미판매 재고(${fmtM(yLastEstInv)}원)로 창고에 보관 중이며<br>
-        판매 시 수익으로 전환됩니다
-      </div>`:''}
-      <div class="yr" style="border-top:0.5px solid var(--border);margin-top:6px;padding-top:6px;"><span class="yr-l">📦 월평균 출고량</span><span class="yr-v" style="color:var(--amber);">${Math.round(yShip/ym.length).toLocaleString()}개/월</span></div>
-      <div class="yr"><span class="yr-l">📦 일평균 출고량</span><span class="yr-v" style="color:var(--amber);">${yDailyShip}개/일</span></div>
-      <div class="yr"><span class="yr-l">👤 1인 운영</span><span class="yr-v" style="color:${yDailyShip<=100?'var(--green)':yDailyShip<=200?'var(--amber)':'var(--red)'};">${ySoloStatus} ${ySoloLabel}</span></div>
     </div>`;
   }).join('');
-
-  // ── 전체 합산 카드 ──
-  const totNI=months.reduce((s,m)=>s+m.nI,0);
-  const totRI=months.reduce((s,m)=>s+m.rI,0);
-  const totI=months.reduce((s,m)=>s+m.tI,0);
-  const totR=months.reduce((s,m)=>s+m.tR,0);
-  const totP=months.reduce((s,m)=>s+m.mP,0);
-  const totNSku=months.reduce((s,m)=>s+m.nSku,0);
-  const totRSku=months.reduce((s,m)=>s+m.rSku,0);
-  const totTSku=totNSku+totRSku;
-  const totCapital=months.reduce((s,m)=>s+m.capitalIn,0);
-  const totPool=months.reduce((s,m)=>s+m.poolUsed,0);
-  const totSkuRev=totTSku>0?totR/totTSku:0;
-  const firstReinvestMonth=months.find(m=>m.poolUsed>0);
-
-  // 전체 발생 수익 = 연도별 (재투자충당 + 연말이월) 합산
-  const totGeneratedProfit=months.reduce((s,m)=>s+Math.max(0,m.mP),0); // 흑자달 수익 합계
-  const totLastPool=months[months.length-1].reinvestPool||0; // 마지막달 이월금
-
-  function tRow(label,val,color){
-    return`<div class="yr"><span class="yr-l">${label}</span><span class="yr-v" style="color:${color};">${val}</span></div>`;
-  }
-  document.getElementById('totalCard').innerHTML=`
-  <div class="total-card">
-    <div class="total-card-title">📊 전체 기간 합산 (${period}개월 / ${Math.ceil(period/12)}년)</div>
-    <div class="total-grid">
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">📦 사입 현황</div>
-        ${tRow('신제품 사입 합계', fmtM(totNI)+'원', 'var(--accent)')}
-        ${tRow('신제품 SKU 월평균', Math.round(totNSku/period).toLocaleString()+'개/월', 'var(--accent)')}
-        ${tRow('리오더 사입 합계', fmtM(totRI)+'원', 'var(--accent2)')}
-        ${tRow('리오더 SKU 월평균', Math.round(totRSku/period).toLocaleString()+'개/월', 'var(--accent2)')}
-        ${tRow('총 SKU 월평균', Math.round(totTSku/period).toLocaleString()+'개/월', 'var(--purple)')}
-        ${tRow('총 사입금 합계', fmtM(totI)+'원', 'var(--amber)')}
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">💰 자본 투입 현황</div>
-        ${tRow('🔴 실제 자본 투입 합계', fmtM(totCapital)+'원', 'var(--red)')}
-        ${tRow('🟢 수익 재투자 충당 합계', fmtM(totPool)+'원', 'var(--green)')}
-        ${tRow('자본 절감률', totI>0?(totPool/totI*100).toFixed(1)+'%':'0%', 'var(--green)')}
-        <div style="margin-top:10px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--text2);line-height:1.9;">
-          총 사입금 중 <span style="color:var(--green);font-weight:600;">${totI>0?(totPool/totI*100).toFixed(1):0}%</span>를<br>수익으로 충당 — 자본 절감
-        </div>
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">📈 매출 & 수익</div>
-        ${tRow('총 예상 매출', fmtM(totR)+'원', '#6c8fff')}
-        ${tRow('SKU당 평균 매출', fmtM(totSkuRev)+'원', 'var(--purple)')}
-        ${tRow('📦 기말 추정 재고자산', fmtM(months[months.length-1].estInv)+'원', 'var(--amber)')}
-        <div style="font-size:10px;color:var(--text3);margin-top:2px;margin-bottom:6px;line-height:1.7;padding:5px 8px;background:rgba(251,191,36,.05);border-radius:5px;">
-          누적사입금 - 누적매출원가 = 창고 보유 자산<br>
-          ※ 실제 재고는 회전율·손실에 따라 다를 수 있음
-        </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:600;">📊 연도별 손익 & 발생 수익</div>
-          ${Array.from({length:Math.ceil(period/12)},(_,yi)=>{
-            const ym=months.filter(m=>m.yr===yi+1);
-            const yP=ym.reduce((s,m)=>s+m.mP,0);
-            const yPool=ym.reduce((s,m)=>s+m.poolUsed,0);
-            const yLastP=ym[ym.length-1].reinvestPool||0;
-            const yGen=yPool+yLastP;
-            return`<div class="yr"><span class="yr-l">${yi+1}년차 손익</span><span class="yr-v ${yP>=0?'pos':'neg'}">${fmtM(yP)}원</span></div>
-            <div class="yr"><span class="yr-l" style="color:var(--accent);">💰 ${yi+1}년차 발생 수익</span><span class="yr-v" style="color:var(--accent);">${fmtM(yGen)}원</span></div>`;
-          }).join('')}
-          <div class="yr" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;">
-            <span class="yr-l" style="font-weight:600;color:var(--text);">전체 합산 손익</span>
-            <span class="yr-v ${totP>=0?'pos':'neg'}" style="font-size:14px;font-weight:700;">${fmtM(totP)}원</span>
-          </div>
-          <div class="yr" style="background:rgba(108,143,255,.07);border-radius:6px;padding:5px 8px;margin-top:4px;">
-            <span class="yr-l" style="color:var(--accent);font-weight:600;">💰 전체 발생 수익 합계</span>
-            <span class="yr-v" style="color:var(--accent);font-weight:700;font-size:14px;">${fmtM(totPool+totLastPool)}원</span>
-          </div>
-          <div style="font-size:10px;color:var(--text3);padding:4px 8px;line-height:1.7;">
-            재투자 충당 ${fmtM(totPool)}원 + 최종 이월 ${fmtM(totLastPool)}원
-          </div>
-        </div>
-        ${tRow('매출/사입 배율', totI>0?(totR/totI).toFixed(2)+'배':'0배', '#6c8fff')}
-        ${tRow('손익/자본 배율', totCapital>0?(totP/totCapital).toFixed(2)+'배':'0배', totP>=0?'var(--green)':'var(--red)')}
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">🎯 핵심 요약</div>
-        <div style="background:var(--bg4);border-radius:8px;padding:12px;font-size:12px;line-height:2.2;">
-          <div>월 투자 목표 <span style="color:var(--accent);font-family:var(--mono);font-weight:600;">${fmtM(months[0].nI)}원</span></div>
-          <div>총 투자 기간 <span style="color:var(--amber);font-family:var(--mono);font-weight:600;">${period}개월</span></div>
-          <div>순 자본 투입 <span style="color:var(--red);font-family:var(--mono);font-weight:600;">${fmtM(totCapital)}원</span></div>
-          ${Array.from({length:Math.ceil(period/12)},(_,yi)=>{
-            const ym=months.filter(m=>m.yr===yi+1);
-            const yCap=ym.reduce((s,m)=>s+m.capitalIn+m.opex,0);
-            const avgCap=yCap/ym.length;
-            return`<div>${yi+1}년차 월평균 <span style="color:var(--purple);font-family:var(--mono);font-weight:600;">${fmtM(avgCap)}원</span></div>`;
-          }).join('')}
-          <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;">전체 월평균 <span style="color:var(--purple);font-family:var(--mono);font-weight:700;">${fmtM(totCapital/period)}원</span></div>
-          <div>수익 자립 시작 <span style="color:var(--green);font-family:var(--mono);font-weight:600;">${firstReinvestMonth?firstReinvestMonth.m+'개월차~':'미달성'}</span></div>
-          <div>손익분기 <span style="color:var(--green);font-family:var(--mono);font-weight:600;">${beMonth>0?beMonth+'개월차':'미달성'}</span></div>
-        </div>
-      </div>
-    </div>
-  </div>`;
 
   // ROI 카드
   const maxYr2=Math.ceil(period/12);
@@ -694,30 +537,30 @@ function runSim(){
   </div>`;
 
   const lb=months.map(m=>m.m+'개월');
-  const tooltipCb={callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}};
+  const to={callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}};
 
   mc('cCum',{type:'line',data:{labels:lb,datasets:[
     {label:'누적 투자금',data:months.map(m=>m.cumI),borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2},
     {label:'누적 매출',data:months.map(m=>m.cumR),borderColor:'#6c8fff',backgroundColor:'rgba(108,143,255,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2},
-  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:tooltipCb},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:to.callbacks}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
 
   const pd=months.map(m=>m.cumP);
-  mc('cPnl',{type:'bar',data:{labels:lb,datasets:[{label:'누적손익',data:pd,backgroundColor:pd.map(v=>v>=0?'rgba(74,222,128,.5)':'rgba(248,113,113,.4)'),borderColor:pd.map(v=>v>=0?'#4ade80':'#f87171'),borderWidth:1,borderRadius:2}]},options:{plugins:{legend:{display:false},tooltip:tooltipCb},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+  mc('cPnl',{type:'bar',data:{labels:lb,datasets:[{data:pd,backgroundColor:pd.map(v=>v>=0?'rgba(74,222,128,.5)':'rgba(248,113,113,.4)'),borderColor:pd.map(v=>v>=0?'#4ade80':'#f87171'),borderWidth:1,borderRadius:2}]},options:{plugins:{tooltip:{callbacks:to}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
 
   mc('cInvest',{type:'bar',data:{labels:lb,datasets:[
     {label:'신제품',data:months.map(m=>m.nI),backgroundColor:'rgba(108,143,255,.6)',borderRadius:2},
     {label:'리오더',data:months.map(m=>m.rI),backgroundColor:'rgba(78,205,196,.6)',borderRadius:2},
-  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:tooltipCb},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:to}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
 
   mc('cRev',{type:'line',data:{labels:lb,datasets:[
     {label:'신제품 매출',data:months.map(m=>m.nR),borderColor:'#6c8fff',tension:.3,pointRadius:2,borderWidth:2,fill:false},
     {label:'리오더 매출',data:months.map(m=>m.rR),borderColor:'#4ecdc4',tension:.3,pointRadius:2,borderWidth:2,fill:false},
-  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:tooltipCb},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+  ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:to}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
 
   let pYr=0;
   document.getElementById('stbl').innerHTML=months.map(m=>{
     let sep='';
-    if(m.yr!==pYr){sep=`<tr class="yr-sep"><td colspan="16">── ${m.yr}년차 (${(m.yr-1)*12+1}~${Math.min(m.yr*12,period)}개월) ──</td></tr>`;pYr=m.yr;}
+    if(m.yr!==pYr){sep=`<tr class="yr-sep"><td colspan="9">── ${m.yr}년차 (${(m.yr-1)*12+1}~${Math.min(m.yr*12,period)}개월) ──</td></tr>`;pYr=m.yr;}
     return sep+`<tr class="${m.isBE?'be-row':''}">
       <td>${m.m}개월차 ${m.isBE?'🟢':''}</td>
       <td style="color:var(--accent);">${fmtM(m.nI)}원</td>
@@ -725,14 +568,9 @@ function runSim(){
       <td style="color:var(--accent2);">${fmtM(m.rI)}원</td>
       <td style="color:var(--accent2);">${m.rSku.toLocaleString()}개</td>
       <td style="color:var(--red);">${m.opex>0?fmtM(m.opex)+'원':'-'}</td>
-      <td style="color:var(--red);">${fmtM(m.capitalIn)}원</td>
-      <td style="color:var(--green);">${m.poolUsed>0?fmtM(m.poolUsed)+'원':'-'}</td>
+      <td style="color:var(--purple);">${m.extra>0?fmtM(m.extra)+'원':'-'}</td>
       <td style="color:#6c8fff;">${fmtM(m.tR)}원</td>
       <td style="color:var(--purple);">${fmtM(m.skuRev)}원</td>
-      <td style="color:var(--amber);">${m.monthlyShip.toLocaleString()}개</td>
-      <td style="color:var(--amber);">${m.dailyShip}개</td>
-      <td style="color:${m.dailyShip<=100?'var(--green)':m.dailyShip<=200?'var(--amber)':'var(--red)'};">${m.soloStatus} ${m.soloLabel}</td>
-      <td style="color:var(--amber);font-weight:500;">${fmtM(m.estInv)}원</td>
       <td class="${m.mP>=0?'pos':'neg'}">${fmtM(m.mP)}원</td>
       <td class="${m.cumP>=0?'pos':'neg'}" style="font-weight:${m.isBE?700:400};">${fmtM(m.cumP)}원</td>
     </tr>`;
@@ -741,6 +579,76 @@ function runSim(){
   document.getElementById('rp').scrollIntoView({behavior:'smooth',block:'start'});
 }
 updatePreview();
+
+// ── Supabase 인증 ──
+const _sb = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
+
+async function simLogin(){
+  const email=document.getElementById('simEmail').value.trim();
+  const pw=document.getElementById('simPw').value;
+  if(!email||!pw)return;
+  const btn=document.querySelector('.sim-btn');
+  btn.textContent='로그인 중...';btn.disabled=true;
+  const{data,error}=await _sb.auth.signInWithPassword({email,password:pw});
+  if(error){
+    document.getElementById('simErr').style.display='block';
+    btn.textContent='로그인';btn.disabled=false;
+    return;
+  }
+  await checkSimAccess(data.user);
+  btn.textContent='로그인';btn.disabled=false;
+}
+
+async function checkSimAccess(user){
+  const{data:profile}=await _sb
+    .from('profiles')
+    .select('plan,expires_at')
+    .eq('id',user.id)
+    .single();
+
+  if(!profile){showSimExpired('프로필을 찾을 수 없습니다.');return;}
+
+  // 관리자는 통과
+  if(profile.plan==='admin'){
+    document.getElementById('simLoginOverlay').style.display='none';
+    return;
+  }
+
+  // premium만 접근 가능
+  if(profile.plan!=='premium'){
+    showSimExpired('PREMIUM 전용 서비스입니다. PREMIUM 구매 후 이용해주세요.');
+    return;
+  }
+
+  // 만료일 체크
+  if(profile.expires_at){
+    const now=new Date();
+    const expires=new Date(profile.expires_at);
+    const daysLeft=Math.ceil((expires-now)/(1000*60*60*24));
+    if(now>expires){showSimExpired('서비스 이용 기간이 만료되었습니다. 연장을 원하시면 문의해주세요.');return;}
+    if(daysLeft<=7){
+      setTimeout(()=>alert(`⚠️ 서비스가 ${daysLeft}일 후 만료됩니다.`),1000);
+    }
+  }
+  document.getElementById('simLoginOverlay').style.display='none';
+}
+
+function showSimExpired(msg){
+  document.querySelector('.sim-login-box').innerHTML=`
+    <div style="text-align:center;padding:20px 0;">
+      <div style="font-size:40px;margin-bottom:16px;">⏰</div>
+      <div style="font-size:16px;font-weight:700;color:#f87171;margin-bottom:12px;">접근 불가</div>
+      <div style="font-size:13px;color:#8b8fa8;line-height:1.8;white-space:pre-line;">${msg}</div>
+    </div>`;
+}
+
+// 세션 자동 확인
+(async()=>{
+  const{data:{session}}=await _sb.auth.getSession();
+  if(session){
+    await checkSimAccess(session.user);
+  }
+})();
 </script>
 </body>
 </html>

@@ -267,7 +267,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 <body>
 
 <!-- ── 로딩 오버레이 ── -->
-<div class="loading-overlay hidden" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay">
   <div class="loading-spinner"></div>
   <div class="loading-text">연결 중...</div>
 </div>
@@ -316,7 +316,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 </div>
 
 <!-- ── 앱 메인 ── -->
-<div id="appScreen" style="display:none !important;">
+<div id="appScreen">
 <div class="shell">
 <aside class="sidebar">
   <div class="logo">
@@ -655,7 +655,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
       <div class="admin-card-title">전체 사용자 목록</div>
       <div class="user-table-wrap">
         <table class="user-table" id="adminUserTable">
-          <thead><tr><th>이메일</th><th>이름</th><th>역할</th><th>회계데이터</th><th>사입데이터</th><th>가입일</th><th>관리</th></tr></thead>
+          <thead><tr><th>이메일</th><th>이름</th><th>역할</th><th>플랜</th><th>만료일</th><th>회계</th><th>사입</th><th>관리</th></tr></thead>
           <tbody id="adminUserBody"><tr><td colspan="7" class="empty">로딩 중...</td></tr></tbody>
         </table>
       </div>
@@ -697,7 +697,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 // SUPABASE 설정
 // ══════════════════════════════════════════════
 const SUPABASE_URL = 'https://clabhjozfrdjrzxymsrw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk';
+const SUPABASE_KEY = 'sb_publishable_DeVRNf63K3aMJHqjEOoERw_9kX8VotB';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -713,20 +713,15 @@ let _purchaseCache = null;
 // 초기화: 세션 확인
 // ══════════════════════════════════════════════
 async function initApp() {
-  // 앱 화면 완전히 숨기기
-  document.getElementById('appScreen').style.cssText = 'display:none !important;';
-  // 로그인 화면 표시
-  document.getElementById('loginScreen').classList.remove('hidden');
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
-      document.getElementById('loginScreen').classList.add('hidden');
       await onLogin(session.user);
     } else {
       showLoginScreen();
     }
   } catch(e) {
-    console.error('Supabase 연결 오류:', e);
+    console.error(e);
     showLoginScreen();
   }
 }
@@ -814,12 +809,12 @@ async function doRegister() {
 function showLoginScreen() {
   document.getElementById('loadingOverlay').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('appScreen').style.cssText = 'display:none !important;';
+  document.getElementById('appScreen').style.display = 'none';
 }
 function showAppScreen() {
   document.getElementById('loadingOverlay').classList.add('hidden');
   document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('appScreen').style.cssText = 'display:flex !important;';
+  document.getElementById('appScreen').style.display = 'flex';
   // 사이드바 유저 정보
   document.getElementById('sidebarEmail').textContent = currentUser.email;
   document.getElementById('sidebarRole').textContent = currentProfile?.role === 'admin' ? '관리자' : '사용자';
@@ -1517,24 +1512,34 @@ async function renderAdmin(){
     document.getElementById('statAccounting').textContent = (acStats||[]).length + '건';
     document.getElementById('statPurchase').textContent = (puStats||[]).length + '건';
     document.getElementById('statAdmins').textContent = (profiles||[]).filter(p=>p.role==='admin').length + '명';
-    document.getElementById('adminUserBody').innerHTML = (profiles||[]).map(p=>`
+    document.getElementById('adminUserBody').innerHTML = (profiles||[]).map(p=>{
+    const expDate=p.expires_at?new Date(p.expires_at):null;
+    const now=new Date();
+    const isExpired=expDate&&now>expDate;
+    const daysLeft=expDate?Math.ceil((expDate-now)/(1000*60*60*24)):null;
+    const expStr=expDate?expDate.toLocaleDateString('ko-KR')+(isExpired?' (만료)':daysLeft<=7?' ('+daysLeft+'일 남음)':''):'-';
+    const expColor=isExpired?'var(--red)':daysLeft&&daysLeft<=7?'var(--amber)':'var(--text2)';
+    return `
       <tr>
         <td style="font-family:var(--mono);font-size:11px;">${p.email||'-'}</td>
         <td>${p.name||'-'}</td>
         <td><span class="role-badge ${p.role==='admin'?'role-admin':'role-user'}">${p.role==='admin'?'관리자':'사용자'}</span></td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(108,143,255,.15);color:var(--accent);">${p.plan||'none'}</span></td>
+        <td style="font-family:var(--mono);font-size:11px;color:${expColor};">${expStr}</td>
         <td style="font-family:var(--mono);">${acCount(p.id)}개월</td>
         <td style="font-family:var(--mono);">${puCount(p.id)}개월</td>
-        <td style="font-family:var(--mono);font-size:11px;">${p.created_at?p.created_at.slice(0,10):'-'}</td>
         <td>
           <div class="action-btns">
             ${p.id !== currentUser.id ? `
               <button class="action-btn info" onclick="toggleAdminRole('${p.id}','${p.role}','${p.email||''}')">${p.role==='admin'?'→ 사용자':'→ 관리자'}</button>
+              <button class="action-btn" style="background:rgba(78,205,196,.15);color:var(--accent2);" onclick="extendExpiry('${p.id}','${p.email||''}')">+30일</button>
+              <button class="action-btn" style="background:rgba(108,143,255,.15);color:var(--accent);" onclick="setPlan('${p.id}','${p.plan||'none'}','${p.email||''}')">플랜변경</button>
               <button class="action-btn danger" onclick="adminDeleteUser('${p.id}','${p.email||''}')">삭제</button>
             ` : '<span style="color:var(--text3);font-size:11px;">(본인)</span>'}
           </div>
         </td>
       </tr>
-    `).join('') || '<tr><td colspan="7" class="empty">사용자 없음</td></tr>';
+    `; }).join('') || '<tr><td colspan="7" class="empty">사용자 없음</td></tr>';
   } catch(e) {
     document.getElementById('adminUserBody').innerHTML=`<tr><td colspan="7" class="empty" style="color:var(--red);">오류: ${e.message}</td></tr>`;
   }

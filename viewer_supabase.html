@@ -622,9 +622,71 @@ async function doLogout(){
 async function checkSession(){
   const{data:{session}}=await _supa.auth.getSession();
   if(session){
+    await checkPlanAndExpiry(session.user);
+  }
+}
+
+async function checkPlanAndExpiry(user){
+  const{data:profile}=await _supa
+    .from('profiles')
+    .select('plan,expires_at,email')
+    .eq('id',user.id)
+    .single();
+
+  if(!profile){
+    showExpiredScreen('프로필을 찾을 수 없습니다.');
+    return;
+  }
+
+  // 관리자는 만료일 체크 없이 통과
+  if(profile.plan==='admin'){
     document.getElementById('loginOverlay').style.display='none';
     loadSupabaseData();
+    return;
   }
+
+  // plan 없는 경우
+  if(!profile.plan||profile.plan==='none'){
+    showExpiredScreen('서비스 이용 권한이 없습니다.
+구매 후 이용해주세요.');
+    return;
+  }
+
+  // 만료일 체크
+  if(profile.expires_at){
+    const now=new Date();
+    const expires=new Date(profile.expires_at);
+    const daysLeft=Math.ceil((expires-now)/(1000*60*60*24));
+
+    if(now>expires){
+      showExpiredScreen('서비스 이용 기간이 만료되었습니다.
+연장을 원하시면 문의해주세요.');
+      return;
+    }
+
+    // 7일 이내 만료 예정 알림
+    if(daysLeft<=7){
+      setTimeout(()=>{
+        alert(`⚠️ 서비스가 ${daysLeft}일 후 만료됩니다.
+연장을 원하시면 문의해주세요.`);
+      },1500);
+    }
+  }
+
+  document.getElementById('loginOverlay').style.display='none';
+  loadSupabaseData();
+}
+
+function showExpiredScreen(msg){
+  document.getElementById('loginOverlay').style.display='flex';
+  const box=document.querySelector('.login-box');
+  box.innerHTML=`
+    <div style="text-align:center;padding:20px 0;">
+      <div style="font-size:40px;margin-bottom:16px;">⏰</div>
+      <div style="font-size:16px;font-weight:700;color:#f87171;margin-bottom:12px;">접근 불가</div>
+      <div style="font-size:13px;color:#8b8fa8;line-height:1.8;white-space:pre-line;">${msg}</div>
+      <button onclick="doLogout()" style="margin-top:20px;padding:10px 24px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#8b8fa8;font-size:13px;cursor:pointer;font-family:inherit;">로그아웃</button>
+    </div>`;
 }
 
 // 관리자 데이터 로드 (관리자 user_id로 데이터 읽기)
