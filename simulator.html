@@ -100,37 +100,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .opex-input{background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:var(--amber);font-family:var(--mono);outline:none;width:120px;transition:border-color .15s;}
 .opex-input:focus{border-color:var(--amber);}
 </style>
-<style>
-.login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
-.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
-.login-logo-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;text-align:center;}
-.login-title{font-size:22px;font-weight:700;margin-bottom:4px;text-align:center;}
-.login-sub{font-size:12px;color:var(--text2);margin-bottom:24px;text-align:center;}
-.login-field{margin-bottom:14px;}
-.login-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
-.login-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
-.login-input:focus{border-color:var(--accent);}
-.login-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
-.login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
-</style>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-.sim-login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
-.sim-login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
-.sim-field{margin-bottom:14px;}
-.sim-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
-.sim-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
-.sim-input:focus{border-color:var(--accent);}
-.sim-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
-.sim-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
-</style>
-<div class="sim-login-overlay" id="simLoginOverlay">
-  <div class="sim-login-box">
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;">B2B · SIMULATOR</div>
-      <div style="font-size:22px;font-weight:700;margin-bottom:4px;">투자 시뮬레이터</div>
+<div style="font-size:22px;font-weight:700;margin-bottom:4px;">투자 시뮬레이터</div>
       <div style="font-size:12px;color:var(--text2);">PREMIUM 전용 서비스입니다</div>
     </div>
     <div class="sim-field">
@@ -145,26 +117,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="sim-err" id="simErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-.sim-login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
-.sim-login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
-.sim-login-logo{text-align:center;margin-bottom:24px;}
-.sim-login-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;}
-.sim-login-title{font-size:22px;font-weight:700;margin-bottom:4px;}
-.sim-login-sub{font-size:12px;color:var(--text2);}
-.sim-field{margin-bottom:14px;}
-.sim-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
-.sim-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
-.sim-input:focus{border-color:var(--accent);}
-.sim-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
-.sim-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
-</style>
-<div class="sim-login-overlay" id="simLoginOverlay">
-  <div class="sim-login-box">
-    <div class="sim-login-logo">
-      <div class="sim-login-mark">B2B · SIMULATOR</div>
-      <div class="sim-login-title">투자 시뮬레이터</div>
+<div class="sim-login-title">투자 시뮬레이터</div>
       <div class="sim-login-sub">PREMIUM 전용 서비스입니다</div>
     </div>
     <div class="sim-field">
@@ -179,13 +132,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="sim-err" id="simErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <!-- 로그인 오버레이 -->
-<div class="login-overlay" id="simLoginOverlay">
-  <div class="login-box">
-    <div class="login-logo-mark">B2B · SIMULATOR</div>
-    <div class="login-title">투자 시뮬레이터</div>
+<div class="login-title">투자 시뮬레이터</div>
     <div class="login-sub">PREMIUM 멤버 전용 서비스입니다</div>
     <div class="login-field">
       <div class="login-label">이메일</div>
@@ -200,11 +148,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<div class="login-overlay" id="simLoginOverlay">
-  <div class="login-box">
-    <div class="login-logo-mark">B2B · SIMULATOR</div>
-    <div class="login-title">투자 시뮬레이터</div>
+<div class="login-title">투자 시뮬레이터</div>
     <div class="login-sub">PREMIUM 멤버 전용 서비스입니다</div>
     <div class="login-field"><div class="login-label">이메일</div><input type="email" class="login-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')simLogin()"></div>
     <div class="login-field"><div class="login-label">비밀번호</div><input type="password" class="login-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')simLogin()"></div>
@@ -650,5 +594,99 @@ function showSimExpired(msg){
   }
 })();
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+#simLoginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.sim-login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
+.sim-login-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;text-align:center;}
+.sim-login-title{font-size:22px;font-weight:700;margin-bottom:4px;text-align:center;}
+.sim-login-sub{font-size:12px;color:var(--text2);margin-bottom:24px;text-align:center;}
+.sim-login-field{margin-bottom:14px;}
+.sim-login-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.sim-login-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
+.sim-login-input:focus{border-color:var(--accent);}
+.sim-login-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
+.sim-login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
+</style>
+<div id="simLoginOverlay">
+  <div class="sim-login-box">
+    <div class="sim-login-mark">B2B · SIMULATOR</div>
+    <div class="sim-login-title">투자 시뮬레이터</div>
+    <div class="sim-login-sub">PREMIUM 멤버 전용 서비스입니다</div>
+    <div class="sim-login-field">
+      <div class="sim-login-label">이메일</div>
+      <input type="email" class="sim-login-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')doSimLogin()">
+    </div>
+    <div class="sim-login-field">
+      <div class="sim-login-label">비밀번호</div>
+      <input type="password" class="sim-login-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doSimLogin()">
+    </div>
+    <button class="sim-login-btn" id="simLoginBtn" onclick="doSimLogin()">로그인</button>
+    <div class="sim-login-err" id="simLoginErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
+<script>
+const _simSb = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
+
+async function doSimLogin(){
+  const email = document.getElementById('simEmail').value.trim();
+  const pw = document.getElementById('simPw').value;
+  const err = document.getElementById('simLoginErr');
+  const btn = document.getElementById('simLoginBtn');
+  if(!email || !pw) return;
+  btn.textContent = '로그인 중...'; btn.disabled = true;
+  err.style.display = 'none';
+
+  const {data, error} = await _simSb.auth.signInWithPassword({email, password: pw});
+  if(error){
+    err.textContent = '이메일 또는 비밀번호가 올바르지 않습니다';
+    err.style.display = 'block';
+    btn.textContent = '로그인'; btn.disabled = false;
+    return;
+  }
+
+  const {data: profile} = await _simSb.from('profiles').select('plan, expires_at').eq('email', email).single();
+  if(!profile || !['premium','admin'].includes(profile.plan)){
+    err.textContent = 'PREMIUM 플랜만 이용 가능합니다';
+    err.style.display = 'block';
+    await _simSb.auth.signOut();
+    btn.textContent = '로그인'; btn.disabled = false;
+    return;
+  }
+
+  if(profile.plan !== 'admin' && profile.expires_at){
+    const now = new Date(), expires = new Date(profile.expires_at);
+    if(now > expires){
+      err.textContent = '서비스 기간이 만료되었습니다. 카톡으로 문의해주세요.';
+      err.style.display = 'block';
+      await _simSb.auth.signOut();
+      btn.textContent = '로그인'; btn.disabled = false;
+      return;
+    }
+    const daysLeft = Math.ceil((expires - now) / (1000*60*60*24));
+    if(daysLeft <= 7) setTimeout(()=>alert('⚠️ 서비스가 ' + daysLeft + '일 후 만료됩니다.'), 500);
+  }
+
+  document.getElementById('simLoginOverlay').style.display = 'none';
+}
+
+async function checkSimSession(){
+  const {data: {session}} = await _simSb.auth.getSession();
+  if(session){
+    const {data: profile} = await _simSb.from('profiles').select('plan, expires_at').eq('email', session.user.email).single();
+    if(profile && ['premium','admin'].includes(profile.plan)){
+      if(profile.plan === 'admin' || !profile.expires_at || new Date() < new Date(profile.expires_at)){
+        document.getElementById('simLoginOverlay').style.display = 'none';
+        return;
+      }
+    }
+    await _simSb.auth.signOut();
+  }
+}
+
+checkSimSession();
+</script>
+
 </body>
 </html>
