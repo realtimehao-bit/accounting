@@ -114,21 +114,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <input id="SP" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doSL()" style="width:100%;background:#1e2030;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 14px;font-size:14px;color:#e8eaf0;outline:none;box-sizing:border-box;margin-bottom:12px;">
     <button id="SB" onclick="doSL()" style="width:100%;padding:12px;background:#6c8fff;border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;">로그인</button>
     <div id="SER" style="color:#f87171;font-size:12px;margin-top:8px;text-align:center;display:none;"></div>
-  </div>
-</div>
-<div style="font-size:22px;font-weight:700;margin-bottom:4px;">투자 시뮬레이터</div>
-      <div style="font-size:12px;color:var(--text2);">PREMIUM 전용 서비스입니다</div>
-    </div>
-    <div class="sim-field">
-      <div class="sim-label">이메일</div>
-      <input type="email" class="sim-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')simLogin()">
-    </div>
-    <div class="sim-field">
-      <div class="sim-label">비밀번호</div>
-      <input type="password" class="sim-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')simLogin()">
-    </div>
-    <button class="sim-btn" onclick="simLogin()">로그인</button>
-    <div class="sim-err" id="simErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
+    <div id="SExpiry" style="font-size:11px;margin-top:12px;text-align:center;display:none;"></div>
   </div>
 </div>
 <div class="header">
@@ -499,11 +485,6 @@ function runSim(){
 }
 updatePreview();
 
-// ── Supabase 인증 ──
-const _sb = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
-
-
-
 
 // 세션 자동 확인
 (async()=>{
@@ -513,5 +494,63 @@ const _sb = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co', 'e
 })();
 </script>
 
+
+<script>
+const _SB = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
+
+function hideSLO(){ document.getElementById('SLO').style.display='none'; }
+
+async function doSL(){
+  const e=document.getElementById('SE').value.trim();
+  const p=document.getElementById('SP').value;
+  const er=document.getElementById('SER');
+  const b=document.getElementById('SB');
+  if(!e||!p)return;
+  b.textContent='확인중...'; b.disabled=true; er.style.display='none';
+  const{data,error}=await _SB.auth.signInWithPassword({email:e,password:p});
+  if(error){
+    er.textContent='이메일 또는 비밀번호 오류';
+    er.style.display='block'; b.textContent='로그인'; b.disabled=false; return;
+  }
+  const{data:pr}=await _SB.from('profiles').select('plan,expires_at').eq('email',e).single();
+  if(!pr||!['premium','admin'].includes(pr.plan)){
+    er.textContent='PREMIUM 플랜만 이용 가능합니다';
+    er.style.display='block'; await _SB.auth.signOut(); b.textContent='로그인'; b.disabled=false; return;
+  }
+  if(pr.plan!=='admin'&&pr.expires_at&&new Date()>new Date(pr.expires_at)){
+    er.textContent='서비스 기간이 만료되었습니다. 카톡으로 문의해주세요.';
+    er.style.display='block'; await _SB.auth.signOut(); b.textContent='로그인'; b.disabled=false; return;
+  }
+  showSExpiry(pr.expires_at, pr.plan);
+  hideSLO();
+}
+
+function showSExpiry(expiresAt, plan){
+  if(plan==='admin'||!expiresAt) return;
+  const expires=new Date(expiresAt);
+  const daysLeft=Math.ceil((expires-new Date())/(1000*60*60*24));
+  // 헤더에 만료일 표시
+  const header=document.querySelector('.header-sub');
+  if(header){
+    const color=daysLeft<=7?'#f87171':daysLeft<=14?'#fbbf24':'#4ecdc4';
+    header.innerHTML+=` <span style="color:${color};font-family:monospace;">| 만료일: ${expires.toLocaleDateString('ko-KR')} (D-${daysLeft})</span>`;
+  }
+  if(daysLeft<=7) setTimeout(()=>alert('⚠️ 서비스가 '+daysLeft+'일 후 만료됩니다.'),500);
+}
+
+(async()=>{
+  try{
+    const{data:{session}}=await _SB.auth.getSession();
+    if(session){
+      const{data:pr}=await _SB.from('profiles').select('plan,expires_at').eq('email',session.user.email).single();
+      if(pr&&['premium','admin'].includes(pr.plan)){
+        const ok=pr.plan==='admin'||!pr.expires_at||new Date()<new Date(pr.expires_at);
+        if(ok){ showSExpiry(pr.expires_at, pr.plan); hideSLO(); return; }
+      }
+      await _SB.auth.signOut();
+    }
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
