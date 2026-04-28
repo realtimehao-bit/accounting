@@ -267,7 +267,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 <body>
 
 <!-- ── 로딩 오버레이 ── -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay hidden" id="loadingOverlay">
   <div class="loading-spinner"></div>
   <div class="loading-text">연결 중...</div>
 </div>
@@ -316,7 +316,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 </div>
 
 <!-- ── 앱 메인 ── -->
-<div id="appScreen" style="display:none;">
+<div id="appScreen" style="display:none !important;">
 <div class="shell">
 <aside class="sidebar">
   <div class="logo">
@@ -697,7 +697,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 // SUPABASE 설정
 // ══════════════════════════════════════════════
 const SUPABASE_URL = 'https://clabhjozfrdjrzxymsrw.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_DeVRNf63K3aMJHqjEOoERw_9kX8VotB';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -713,15 +713,20 @@ let _purchaseCache = null;
 // 초기화: 세션 확인
 // ══════════════════════════════════════════════
 async function initApp() {
+  // 앱 화면 완전히 숨기기
+  document.getElementById('appScreen').style.cssText = 'display:none !important;';
+  // 로그인 화면 표시
+  document.getElementById('loginScreen').classList.remove('hidden');
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
+      document.getElementById('loginScreen').classList.add('hidden');
       await onLogin(session.user);
     } else {
       showLoginScreen();
     }
   } catch(e) {
-    console.error(e);
+    console.error('Supabase 연결 오류:', e);
     showLoginScreen();
   }
 }
@@ -809,12 +814,12 @@ async function doRegister() {
 function showLoginScreen() {
   document.getElementById('loadingOverlay').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('appScreen').style.cssText = 'display:none !important;';
 }
 function showAppScreen() {
   document.getElementById('loadingOverlay').classList.add('hidden');
   document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('appScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.cssText = 'display:flex !important;';
   // 사이드바 유저 정보
   document.getElementById('sidebarEmail').textContent = currentUser.email;
   document.getElementById('sidebarRole').textContent = currentProfile?.role === 'admin' ? '관리자' : '사용자';
