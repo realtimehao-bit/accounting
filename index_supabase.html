@@ -1510,7 +1510,7 @@ async function renderAdmin(){
   document.getElementById('adminUserBody').innerHTML='<tr><td colspan="5" class="empty">로딩 중...</td></tr>';
   try {
     // profiles 전체 조회
-    const { data: profiles, error: pErr } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+    const { data: profiles, error: pErr } = await sb.from('profiles').select('*').order('created_at',{ascending:false}).limit(1000);
     if(pErr) throw pErr;
     document.getElementById('statUsers').textContent = (profiles||[]).length + '명';
     document.getElementById('statAdmins').textContent = (profiles||[]).filter(p=>p.role==='admin').length + '명';
@@ -1594,8 +1594,8 @@ async function extendExpiry(userId, email){
       showAlert('⚠️ 업데이트 권한 없음 (RLS 정책 확인 필요)\nSupabase 대시보드에서 profiles UPDATE 정책을 확인하세요.');
       return;
     }
-    showAlert(`✅ ${email} 만료일이 ${days}일 연장되었습니다.\n새 만료일: ${from.toLocaleDateString('ko-KR')}`);
     await renderAdmin();
+    showAlert(`✅ ${email} 만료일이 ${days}일 연장되었습니다. 새 만료일: ${from.toLocaleDateString('ko-KR')}`);
   } catch(e) {
     showAlert('오류: ' + e.message);
     console.error('extendExpiry 오류:', e);
@@ -1619,8 +1619,8 @@ async function setPlan(userId, currentPlan, email){
     showAlert('⚠️ 플랜 업데이트 권한 없음 (RLS 정책 확인 필요)');
     return;
   }
-  showAlert(`✅ ${email} 플랜이 ${labels[planIdx]}로 변경되었습니다.`);
   await renderAdmin();
+  showAlert(`✅ ${email} 플랜이 ${labels[planIdx]}로 변경되었습니다.`);
 }
 
 async function adminCreateUser(){
