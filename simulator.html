@@ -527,166 +527,73 @@ updatePreview();
 // ── Supabase 인증 ──
 const _sb = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
 
-async function simLogin(){
-  const email=document.getElementById('simEmail').value.trim();
-  const pw=document.getElementById('simPw').value;
-  if(!email||!pw)return;
-  const btn=document.querySelector('.sim-btn');
-  btn.textContent='로그인 중...';btn.disabled=true;
-  const{data,error}=await _sb.auth.signInWithPassword({email,password:pw});
-  if(error){
-    document.getElementById('simErr').style.display='block';
-    btn.textContent='로그인';btn.disabled=false;
-    return;
-  }
-  await checkSimAccess(data.user);
-  btn.textContent='로그인';btn.disabled=false;
-}
 
-async function checkSimAccess(user){
-  const{data:profile}=await _sb
-    .from('profiles')
-    .select('plan,expires_at')
-    .eq('id',user.id)
-    .single();
 
-  if(!profile){showSimExpired('프로필을 찾을 수 없습니다.');return;}
-
-  // 관리자는 통과
-  if(profile.plan==='admin'){
-    document.getElementById('simLoginOverlay').style.display='none';
-    return;
-  }
-
-  // premium만 접근 가능
-  if(profile.plan!=='premium'){
-    showSimExpired('PREMIUM 전용 서비스입니다. PREMIUM 구매 후 이용해주세요.');
-    return;
-  }
-
-  // 만료일 체크
-  if(profile.expires_at){
-    const now=new Date();
-    const expires=new Date(profile.expires_at);
-    const daysLeft=Math.ceil((expires-now)/(1000*60*60*24));
-    if(now>expires){showSimExpired('서비스 이용 기간이 만료되었습니다. 연장을 원하시면 문의해주세요.');return;}
-    if(daysLeft<=7){
-      setTimeout(()=>alert(`⚠️ 서비스가 ${daysLeft}일 후 만료됩니다.`),1000);
-    }
-  }
-  document.getElementById('simLoginOverlay').style.display='none';
-}
-
-function showSimExpired(msg){
-  document.querySelector('.sim-login-box').innerHTML=`
-    <div style="text-align:center;padding:20px 0;">
-      <div style="font-size:40px;margin-bottom:16px;">⏰</div>
-      <div style="font-size:16px;font-weight:700;color:#f87171;margin-bottom:12px;">접근 불가</div>
-      <div style="font-size:13px;color:#8b8fa8;line-height:1.8;white-space:pre-line;">${msg}</div>
-    </div>`;
-}
 
 // 세션 자동 확인
 (async()=>{
   const{data:{session}}=await _sb.auth.getSession();
   if(session){
-    await checkSimAccess(session.user);
-  }
+      }
 })();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 #simLoginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
-.sim-login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
-.sim-login-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;text-align:center;}
-.sim-login-title{font-size:22px;font-weight:700;margin-bottom:4px;text-align:center;}
-.sim-login-sub{font-size:12px;color:var(--text2);margin-bottom:24px;text-align:center;}
-.sim-login-field{margin-bottom:14px;}
-.sim-login-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
-.sim-login-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);}
-.sim-login-input:focus{border-color:var(--accent);}
-.sim-login-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:8px;}
-.sim-login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
+.slb{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;}
+.slb-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;margin-bottom:8px;text-align:center;}
+.slb-title{font-size:22px;font-weight:700;margin-bottom:4px;text-align:center;}
+.slb-sub{font-size:12px;color:var(--text2);margin-bottom:24px;text-align:center;}
+.slb-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.slb-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--sans);margin-bottom:14px;}
+.slb-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);margin-top:4px;}
+.slb-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;display:none;}
 </style>
 <div id="simLoginOverlay">
-  <div class="sim-login-box">
-    <div class="sim-login-mark">B2B · SIMULATOR</div>
-    <div class="sim-login-title">투자 시뮬레이터</div>
-    <div class="sim-login-sub">PREMIUM 멤버 전용 서비스입니다</div>
-    <div class="sim-login-field">
-      <div class="sim-login-label">이메일</div>
-      <input type="email" class="sim-login-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')doSimLogin()">
-    </div>
-    <div class="sim-login-field">
-      <div class="sim-login-label">비밀번호</div>
-      <input type="password" class="sim-login-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doSimLogin()">
-    </div>
-    <button class="sim-login-btn" id="simLoginBtn" onclick="doSimLogin()">로그인</button>
-    <div class="sim-login-err" id="simLoginErr">이메일 또는 비밀번호가 올바르지 않습니다</div>
+  <div class="slb">
+    <div class="slb-mark">B2B · SIMULATOR</div>
+    <div class="slb-title">투자 시뮬레이터</div>
+    <div class="slb-sub">PREMIUM 멤버 전용 서비스입니다</div>
+    <div class="slb-label">이메일</div>
+    <input type="email" class="slb-input" id="simEmail" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')doSimLogin()">
+    <div class="slb-label">비밀번호</div>
+    <input type="password" class="slb-input" id="simPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doSimLogin()">
+    <button class="slb-btn" id="simLoginBtn" onclick="doSimLogin()">로그인</button>
+    <div class="slb-err" id="simLoginErr"></div>
   </div>
 </div>
 <script>
-const _simSb = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
-
+const _sb2=supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
 async function doSimLogin(){
-  const email = document.getElementById('simEmail').value.trim();
-  const pw = document.getElementById('simPw').value;
-  const err = document.getElementById('simLoginErr');
-  const btn = document.getElementById('simLoginBtn');
-  if(!email || !pw) return;
-  btn.textContent = '로그인 중...'; btn.disabled = true;
-  err.style.display = 'none';
-
-  const {data, error} = await _simSb.auth.signInWithPassword({email, password: pw});
-  if(error){
-    err.textContent = '이메일 또는 비밀번호가 올바르지 않습니다';
-    err.style.display = 'block';
-    btn.textContent = '로그인'; btn.disabled = false;
-    return;
+  const email=document.getElementById('simEmail').value.trim();
+  const pw=document.getElementById('simPw').value;
+  const err=document.getElementById('simLoginErr');
+  const btn=document.getElementById('simLoginBtn');
+  if(!email||!pw)return;
+  btn.textContent='확인 중...';btn.disabled=true;err.style.display='none';
+  const{data,error}=await _sb2.auth.signInWithPassword({email,password:pw});
+  if(error){err.textContent='이메일 또는 비밀번호 오류';err.style.display='block';btn.textContent='로그인';btn.disabled=false;return;}
+  const{data:p}=await _sb2.from('profiles').select('plan,expires_at').eq('email',email).single();
+  if(!p||!['premium','admin'].includes(p.plan)){
+    err.textContent='PREMIUM 플랜만 이용 가능합니다';err.style.display='block';
+    await _sb2.auth.signOut();btn.textContent='로그인';btn.disabled=false;return;
   }
-
-  const {data: profile} = await _simSb.from('profiles').select('plan, expires_at').eq('email', email).single();
-  if(!profile || !['premium','admin'].includes(profile.plan)){
-    err.textContent = 'PREMIUM 플랜만 이용 가능합니다';
-    err.style.display = 'block';
-    await _simSb.auth.signOut();
-    btn.textContent = '로그인'; btn.disabled = false;
-    return;
+  if(p.plan!=='admin'&&p.expires_at&&new Date()>new Date(p.expires_at)){
+    err.textContent='서비스 기간이 만료되었습니다';err.style.display='block';
+    await _sb2.auth.signOut();btn.textContent='로그인';btn.disabled=false;return;
   }
-
-  if(profile.plan !== 'admin' && profile.expires_at){
-    const now = new Date(), expires = new Date(profile.expires_at);
-    if(now > expires){
-      err.textContent = '서비스 기간이 만료되었습니다. 카톡으로 문의해주세요.';
-      err.style.display = 'block';
-      await _simSb.auth.signOut();
-      btn.textContent = '로그인'; btn.disabled = false;
-      return;
-    }
-    const daysLeft = Math.ceil((expires - now) / (1000*60*60*24));
-    if(daysLeft <= 7) setTimeout(()=>alert('⚠️ 서비스가 ' + daysLeft + '일 후 만료됩니다.'), 500);
-  }
-
-  document.getElementById('simLoginOverlay').style.display = 'none';
+  document.getElementById('simLoginOverlay').style.display='none';
 }
-
-async function checkSimSession(){
-  const {data: {session}} = await _simSb.auth.getSession();
+(async()=>{
+  const{data:{session}}=await _sb2.auth.getSession();
   if(session){
-    const {data: profile} = await _simSb.from('profiles').select('plan, expires_at').eq('email', session.user.email).single();
-    if(profile && ['premium','admin'].includes(profile.plan)){
-      if(profile.plan === 'admin' || !profile.expires_at || new Date() < new Date(profile.expires_at)){
-        document.getElementById('simLoginOverlay').style.display = 'none';
-        return;
-      }
+    const{data:p}=await _sb2.from('profiles').select('plan,expires_at').eq('email',session.user.email).single();
+    if(p&&['premium','admin'].includes(p.plan)&&(p.plan==='admin'||!p.expires_at||new Date()<new Date(p.expires_at))){
+      document.getElementById('simLoginOverlay').style.display='none';
     }
-    await _simSb.auth.signOut();
   }
-}
-
-checkSimSession();
+})();
 </script>
-
 </body>
 </html>
