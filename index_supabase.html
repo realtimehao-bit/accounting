@@ -664,8 +664,6 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
       <div class="admin-card-title">시스템 현황</div>
       <div id="adminStats">
         <div class="stat-row"><span class="stat-label">총 사용자</span><span class="stat-val" id="statUsers">-</span></div>
-        <div class="stat-row"><span class="stat-label">총 회계 레코드</span><span class="stat-val" id="statAccounting">-</span></div>
-        <div class="stat-row"><span class="stat-label">총 사입 레코드</span><span class="stat-val" id="statPurchase">-</span></div>
         <div class="stat-row"><span class="stat-label">관리자 수</span><span class="stat-val" id="statAdmins">-</span></div>
       </div>
     </div>
@@ -1514,14 +1512,7 @@ async function renderAdmin(){
     // profiles 전체 조회
     const { data: profiles, error: pErr } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
     if(pErr) throw pErr;
-    // 각 유저의 데이터 건수 조회
-    const { data: acStats } = await sb.from('accounting_data').select('user_id');
-    const { data: puStats } = await sb.from('purchase_data').select('user_id');
-    const acCount = (uid) => (acStats||[]).filter(r=>r.user_id===uid).length;
-    const puCount = (uid) => (puStats||[]).filter(r=>r.user_id===uid).length;
     document.getElementById('statUsers').textContent = (profiles||[]).length + '명';
-    document.getElementById('statAccounting').textContent = (acStats||[]).length + '건';
-    document.getElementById('statPurchase').textContent = (puStats||[]).length + '건';
     document.getElementById('statAdmins').textContent = (profiles||[]).filter(p=>p.role==='admin').length + '명';
     document.getElementById('adminUserBody').innerHTML = (profiles||[]).map(p=>{
     const expDate=p.expires_at?new Date(p.expires_at):null;
@@ -1535,7 +1526,12 @@ async function renderAdmin(){
         <td style="font-family:var(--mono);font-size:11px;">${p.email||'-'}</td>
         <td>${p.name||'-'}</td>
         <td><span class="role-badge ${p.role==='admin'?'role-admin':'role-user'}">${p.role==='admin'?'관리자':'사용자'}</span></td>
-        <td><span style="font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(108,143,255,.15);color:var(--accent);">${p.plan||'none'}</span></td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:99px;${
+            p.plan==='premium'?'background:rgba(250,204,21,.15);color:#facc15;':
+            p.plan==='deluxe'?'background:rgba(251,146,60,.15);color:#fb923c;':
+            p.plan==='admin'?'background:rgba(108,143,255,.15);color:var(--accent);':
+            'background:rgba(148,163,184,.15);color:var(--text3);'
+          }">${p.plan||'none'}</span></td>
         <td style="font-family:var(--mono);font-size:11px;color:${expColor};">${expStr}</td>
         <td>
           <div class="action-btns">
