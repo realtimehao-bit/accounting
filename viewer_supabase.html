@@ -289,7 +289,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 <div id="view-purchase" class="view">
   <div class="topbar">
     <div><div class="page-title">사입 분석</div><div class="page-sub">신제품 vs 리오더 사입금액 · SKU · 비율 분석</div></div>
-    <button class="btn" onclick="exportPurchaseCSV()">↓ CSV</button>
+    <button class="btn" onclick="currentProfile?.role==='admin'?exportPurchaseCSV():alert('데이터 다운로드는 관리자만 가능합니다.')">↓ CSV</button>
   </div>
 
   <!-- 검색 필터 -->
@@ -430,7 +430,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 <div id="view-ledger" class="view">
   <div class="topbar">
     <div><div class="page-title">월별 내역</div><div class="page-sub">전체 데이터 조회</div></div>
-    <button class="btn" onclick="exportCSV()">↓ CSV</button>
+    <button class="btn" onclick="currentProfile?.role==='admin'?exportCSV():alert('데이터 다운로드는 관리자만 가능합니다.')">↓ CSV</button>
   </div>
   <div class="filter-bar">
     <select id="filterYear" onchange="renderLedger()"><option value="">전체 연도</option></select>
