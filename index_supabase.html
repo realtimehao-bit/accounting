@@ -1582,8 +1582,10 @@ async function adminDeleteUser(userId, email){
 }
 
 async function extendExpiry(userId, email){
-  const days = parseInt(prompt(`${email}\n연장할 일수를 입력하세요 (기본 30일):`, '30'));
-  if(!days || isNaN(days)) return;
+  const input = prompt(`${email}\n연장할 일수를 입력하세요 (기본 30일):`, '30');
+  if(input === null) return;
+  const days = parseInt(input);
+  if(!days || isNaN(days) || days < 1) { alert('올바른 일수를 입력하세요.'); return; }
   try {
     // 현재 만료일 조회
     const { data: prof } = await sb.from('profiles').select('expires_at').eq('id', userId).single();
@@ -1594,7 +1596,7 @@ async function extendExpiry(userId, email){
     const { error } = await sb.from('profiles').update({ expires_at: from.toISOString(), is_active: true }).eq('id', userId);
     if(error) throw error;
     showAlert(`✅ ${email} 만료일이 ${days}일 연장되었습니다.\n새 만료일: ${from.toLocaleDateString('ko-KR')}`);
-    renderAdmin();
+    await renderAdmin();
   } catch(e) {
     showAlert('오류: ' + e.message);
   }
@@ -1607,13 +1609,13 @@ async function setPlan(userId, currentPlan, email){
   const options = labels.map((l,i) => `${i===current?'✓ ':''}${l}`).join('\n');
   const input = prompt(`${email}\n플랜을 선택하세요 (숫자 입력):\n0: ${labels[0]}\n1: ${labels[1]}\n2: ${labels[2]}\n3: ${labels[3]}`, current >= 0 ? current : 0);
   if(input === null) return;
-  const idx = parseInt(input);
-  if(isNaN(idx) || idx < 0 || idx > 3) { showAlert('잘못된 입력입니다.'); return; }
-  const newPlan = plans[idx];
+  const planIdx = parseInt(input);
+  if(isNaN(planIdx) || planIdx < 0 || planIdx > 3) { showAlert('잘못된 입력입니다.'); return; }
+  const newPlan = plans[planIdx];
   const { error } = await sb.from('profiles').update({ plan: newPlan }).eq('id', userId);
   if(error) { showAlert('오류: ' + error.message); return; }
-  showAlert(`✅ ${email} 플랜이 ${labels[idx]}로 변경되었습니다.`);
-  renderAdmin();
+  showAlert(`✅ ${email} 플랜이 ${labels[planIdx]}로 변경되었습니다.`);
+  await renderAdmin();
 }
 
 async function adminCreateUser(){
