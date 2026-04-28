@@ -184,12 +184,12 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <div class="pct-btns">
             <button class="pct-btn" onclick="setReinvest(30)">30%</button>
             <button class="pct-btn" onclick="setReinvest(50)">50%</button>
-            <button class="pct-btn active" onclick="setReinvest(70)">70%</button>
-            <button class="pct-btn" onclick="setReinvest(100)">100%</button>
+            <button class="pct-btn" onclick="setReinvest(70)">70%</button>
+            <button class="pct-btn active" onclick="setReinvest(100)">100%</button>
             <button class="pct-btn" onclick="setReinvest('custom')" id="customPctBtn">직접입력</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <input type="number" id="reinvestPct" value="70" min="0" max="100" style="background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:16px;font-weight:600;color:var(--purple);font-family:var(--mono);outline:none;width:90px;" oninput="updateGuide()">
+            <input type="number" id="reinvestPct" value="100" min="0" max="100" style="background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:16px;font-weight:600;color:var(--purple);font-family:var(--mono);outline:none;width:90px;" oninput="updateGuide()">
             <span style="font-size:13px;color:var(--text2);">% 재투자</span>
           </div>
           <div class="guide-box" id="guideBox">
@@ -200,7 +200,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div>
           <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">월 고정 운영비 (선택)</div>
           <div class="opex-wrap">
-            <input type="number" class="opex-input" id="opexAmt" value="0" min="0" placeholder="0">
+            <input type="number" class="opex-input" id="opexAmt" value="150" min="0" placeholder="0">
             <span style="font-size:13px;color:var(--text2);">만원 / 월</span>
           </div>
           <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.8;">
@@ -279,7 +279,7 @@ function setPeriod(m){
   period=m;
   document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('active',b.textContent===m/12+'년'));
 }
-let reinvestPct = 70;
+let reinvestPct = 100;
 function setReinvest(v){
   if(v==='custom'){
     document.getElementById('reinvestPct').focus();
@@ -344,9 +344,10 @@ function runSim(){
 
   for(let m=1;m<=period;m++){
     const yr=Math.min(Math.ceil(m/12),3);
-    // 재투자분을 신제품에 추가
-    const nAmt=nAmtBase+extraInvest;
-    const nI=nAmt, rI=nAmt*REAL.reRatio[yr], tI=nI+rI;
+    // 재투자분은 신제품에만 추가, 리오더는 기본금 기준 유지
+    const nI=nAmtBase+extraInvest;
+    const rI=nAmtBase*REAL.reRatio[yr]; // 리오더는 항상 기본 투자금 기준
+    const tI=nI+rI;
     nH.push(nI);rH.push(rI);
 
     let nR=0;
@@ -365,8 +366,7 @@ function runSim(){
     }
     const tR=nR+rR;
     const mP=tR-tI-opex; // 운영비 차감
-    const mProfit=Math.max(0,mP); // 실제 수익 (마이너스면 0으로)
-    extraInvest=mProfit*rPct; // 다음달 재투자금
+    extraInvest=(mP>0?mP:0)*rPct; // 순이익의 rPct% 재투자
     cumI+=tI+opex;cumR+=tR;cumP+=mP;
     if(beMonth<0&&cumP>=0)beMonth=m;
     const nSku=Math.round(nI/REAL.newUnit[yr]);
