@@ -199,7 +199,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div>
           <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">월 고정 운영비 (선택)</div>
           <div class="opex-wrap">
-            <input type="number" class="opex-input" id="opexAmt" value="0" min="0" placeholder="0">
+            <input type="number" class="opex-input" id="opexAmt" value="150" min="0" placeholder="0">
             <span style="font-size:13px;color:var(--text2);">만원 / 월</span>
           </div>
           <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.8;">
@@ -343,9 +343,13 @@ function runSim(){
 
   for(let m=1;m<=period;m++){
     const yr=Math.min(Math.ceil(m/12),3);
-    // 재투자분을 신제품에 추가
-    const nAmt=nAmtBase+extraInvest;
-    const nI=nAmt, rI=nAmt*REAL.reRatio[yr], tI=nI+rI;
+    // 재투자분은 신제품+리오더 전체에 비례 배분
+    const totalBase=nAmtBase*(1+REAL.reRatio[yr]);
+    const reInvestNew=extraInvest*(nAmtBase/totalBase);
+    const reInvestRe=extraInvest*(nAmtBase*REAL.reRatio[yr]/totalBase);
+    const nI=nAmtBase+reInvestNew;
+    const rI=nAmtBase*REAL.reRatio[yr]+reInvestRe;
+    const tI=nI+rI;
     nH.push(nI);rH.push(rI);
 
     let nR=0;
