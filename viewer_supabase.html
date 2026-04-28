@@ -209,6 +209,10 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
     <div class="nav-item" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><span class="nav-icon">≡</span> 월별 내역</div>
     <div class="nav-item" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><span class="nav-icon">＋</span> 데이터 입력</div>
     <div class="nav-item" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><span class="nav-icon">↑</span> 엑셀 가져오기</div>
+    <div id="adminNavSection" style="display:none;">
+      <div class="nav-label">관리자</div>
+      <div class="nav-item" onclick="showView('admin')"><span class="nav-icon">⚙</span> 회원 관리</div>
+    </div>
   </nav>
   <div class="sidebar-bottom">
     회계: <span class="data-count" id="sidebarCount">0개월</span><br>
@@ -289,7 +293,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 <div id="view-purchase" class="view">
   <div class="topbar">
     <div><div class="page-title">사입 분석</div><div class="page-sub">신제품 vs 리오더 사입금액 · SKU · 비율 분석</div></div>
-    <button class="btn" onclick="currentProfile?.role==='admin'?exportPurchaseCSV():alert('데이터 다운로드는 관리자만 가능합니다.')">↓ CSV</button>
+    <button class="btn csv-btn" onclick="exportPurchaseCSV()">↓ CSV</button>
   </div>
 
   <!-- 검색 필터 -->
@@ -430,7 +434,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 <div id="view-ledger" class="view">
   <div class="topbar">
     <div><div class="page-title">월별 내역</div><div class="page-sub">전체 데이터 조회</div></div>
-    <button class="btn" onclick="currentProfile?.role==='admin'?exportCSV():alert('데이터 다운로드는 관리자만 가능합니다.')">↓ CSV</button>
+    <button class="btn csv-btn" onclick="exportCSV()">↓ CSV</button>
   </div>
   <div class="filter-bar">
     <select id="filterYear" onchange="renderLedger()"><option value="">전체 연도</option></select>
@@ -572,6 +576,8 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 </style>
 
 <script>
+let currentProfile = null;
+
 // ── Supabase 설정 ──
 const _supa = supabase.createClient('https://clabhjozfrdjrzxymsrw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsYWJoam96ZnJkanJ6eHltc3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjcxODUsImV4cCI6MjA5Mjg0MzE4NX0.QuBt7Xa-HQTAVrgRMxxIh-cbBa2J7wzZMWiX10Mm_Jk');
 const ADMIN_EMAIL = 'realtimehao@gmail.com'; // 관리자 이메일
@@ -612,7 +618,7 @@ async function checkSession(){
 async function checkPlanAndExpiry(user){
   const{data:profile}=await _supa
     .from('profiles')
-    .select('plan,expires_at,email')
+    .select('plan,expires_at,email,role')
     .eq('id',user.id)
     .single();
 
@@ -621,9 +627,13 @@ async function checkPlanAndExpiry(user){
     return;
   }
 
+  // 전역 저장
+  currentProfile = profile;
+
   // 관리자는 만료일 체크 없이 통과
   if(profile.plan==='admin'){
     document.getElementById('loginOverlay').style.display='none';
+    applyRoleUI(profile);
     loadSupabaseData();
     return;
   }
@@ -660,7 +670,27 @@ async function checkPlanAndExpiry(user){
   }
 
   document.getElementById('loginOverlay').style.display='none';
+  applyRoleUI(profile);
   loadSupabaseData();
+}
+
+function applyRoleUI(profile){
+  const isAdmin = profile?.role === 'admin' || profile?.plan === 'admin';
+  // 관리자 전용 메뉴 표시
+  const adminMenu = document.getElementById('adminNavSection');
+  if(adminMenu) adminMenu.style.display = isAdmin ? '' : 'none';
+  // CSV 버튼: 관리자는 활성, 일반은 비활성 스타일
+  document.querySelectorAll('.csv-btn').forEach(btn => {
+    if(isAdmin){
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = '';
+      btn.title = '';
+    } else {
+      btn.style.opacity = '0.4';
+      btn.style.pointerEvents = 'none';
+      btn.title = '관리자만 다운로드 가능합니다.';
+    }
+  });
 }
 
 function showExpiredScreen(msg){
