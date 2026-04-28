@@ -674,11 +674,22 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
       <div class="form-group" style="margin-bottom:10px;"><label>이메일</label><input type="email" id="adminNewEmail" placeholder="user@example.com"></div>
       <div class="form-group" style="margin-bottom:10px;"><label>임시 비밀번호</label><input type="password" id="adminNewPassword" placeholder="6자 이상"></div>
       <div class="form-group" style="margin-bottom:10px;"><label>이름</label><input type="text" id="adminNewName" placeholder="홍길동"></div>
-      <div class="form-group" style="margin-bottom:14px;"><label>역할</label>
+      <div class="form-group" style="margin-bottom:10px;"><label>역할</label>
         <select id="adminNewRole">
           <option value="user">일반 사용자</option>
           <option value="admin">관리자</option>
         </select>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;"><label>플랜</label>
+        <select id="adminNewPlan">
+          <option value="none">없음 (none)</option>
+          <option value="deluxe">DELUXE (뷰어)</option>
+          <option value="premium">PREMIUM (뷰어+시뮬레이터)</option>
+          <option value="admin">ADMIN</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;"><label>만료일 (기본 30일)</label>
+        <input type="number" id="adminNewDays" value="30" min="1" max="365" placeholder="일수 입력">
       </div>
       <button class="btn primary" onclick="adminCreateUser()" style="width:100%;">계정 생성</button>
       <div id="adminCreateResult" style="margin-top:10px;"></div>
@@ -1570,6 +1581,41 @@ async function adminDeleteUser(userId, email){
   }
 }
 
+async function extendExpiry(userId, email){
+  const days = parseInt(prompt(`${email}\n연장할 일수를 입력하세요 (기본 30일):`, '30'));
+  if(!days || isNaN(days)) return;
+  try {
+    // 현재 만료일 조회
+    const { data: prof } = await sb.from('profiles').select('expires_at').eq('id', userId).single();
+    const base = prof?.expires_at ? new Date(prof.expires_at) : new Date();
+    // 현재 만료일이 오늘보다 이전이면 오늘부터 계산
+    const from = base > new Date() ? base : new Date();
+    from.setDate(from.getDate() + days);
+    const { error } = await sb.from('profiles').update({ expires_at: from.toISOString(), is_active: true }).eq('id', userId);
+    if(error) throw error;
+    showAlert(`✅ ${email} 만료일이 ${days}일 연장되었습니다.\n새 만료일: ${from.toLocaleDateString('ko-KR')}`);
+    renderAdmin();
+  } catch(e) {
+    showAlert('오류: ' + e.message);
+  }
+}
+
+async function setPlan(userId, currentPlan, email){
+  const plans = ['none','deluxe','premium','admin'];
+  const labels = ['없음(none)','DELUXE','PREMIUM','ADMIN'];
+  const current = plans.indexOf(currentPlan);
+  const options = labels.map((l,i) => `${i===current?'✓ ':''}${l}`).join('\n');
+  const input = prompt(`${email}\n플랜을 선택하세요 (숫자 입력):\n0: ${labels[0]}\n1: ${labels[1]}\n2: ${labels[2]}\n3: ${labels[3]}`, current >= 0 ? current : 0);
+  if(input === null) return;
+  const idx = parseInt(input);
+  if(isNaN(idx) || idx < 0 || idx > 3) { showAlert('잘못된 입력입니다.'); return; }
+  const newPlan = plans[idx];
+  const { error } = await sb.from('profiles').update({ plan: newPlan }).eq('id', userId);
+  if(error) { showAlert('오류: ' + error.message); return; }
+  showAlert(`✅ ${email} 플랜이 ${labels[idx]}로 변경되었습니다.`);
+  renderAdmin();
+}
+
 async function adminCreateUser(){
   const email = document.getElementById('adminNewEmail').value.trim();
   const password = document.getElementById('adminNewPassword').value;
@@ -1580,17 +1626,31 @@ async function adminCreateUser(){
   if(password.length<6){resEl.innerHTML='<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">비밀번호는 6자 이상이어야 합니다.</div>';return;}
   resEl.innerHTML='<div class="import-note">처리 중...</div>';
   try {
-    // Supabase auth 계정 생성 (signUp 사용, admin API 없이)
+    const plan = document.getElementById('adminNewPlan').value;
+    const days = parseInt(document.getElementById('adminNewDays').value) || 30;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + days);
+
+    // Supabase auth 계정 생성
     const { data, error } = await sb.auth.signUp({
       email, password,
       options: { data: { name } }
     });
     if(error) throw error;
-    // profiles에 역할 설정
+
+    // profiles에 역할 + 플랜 + 만료일 설정
     if(data.user){
-      await sb.from('profiles').upsert({ id: data.user.id, email, name, role });
+      await sb.from('profiles').upsert({
+        id: data.user.id,
+        email, name, role,
+        plan,
+        purchased_at: new Date().toISOString(),
+        expires_at: plan === 'none' || plan === 'admin' ? null : expiresAt.toISOString(),
+        is_active: true
+      });
     }
-    resEl.innerHTML=`<div class="import-note">✅ 계정 생성 완료!<br>이메일: ${email}<br>역할: ${role==='admin'?'관리자':'사용자'}</div>`;
+    const planLabel = {none:'없음', deluxe:'DELUXE', premium:'PREMIUM', admin:'ADMIN'}[plan];
+    resEl.innerHTML=`<div class="import-note">✅ 계정 생성 완료!<br>이메일: ${email}<br>플랜: ${planLabel}<br>만료일: ${plan==='none'||plan==='admin'?'없음':expiresAt.toLocaleDateString('ko-KR')}</div>`;
     showAlert('계정 생성 완료!');
     ['adminNewEmail','adminNewPassword','adminNewName'].forEach(id=>document.getElementById(id).value='');
     renderAdmin();
