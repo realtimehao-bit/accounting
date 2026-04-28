@@ -1587,12 +1587,18 @@ async function extendExpiry(userId, email){
     // 현재 만료일이 오늘보다 이전이면 오늘부터 계산
     const from = base > new Date() ? base : new Date();
     from.setDate(from.getDate() + days);
-    const { error } = await sb.from('profiles').update({ expires_at: from.toISOString(), is_active: true }).eq('id', userId);
+    const { data: upData, error } = await sb.from('profiles').update({ expires_at: from.toISOString(), is_active: true }).eq('id', userId).select();
+    console.log('update 결과:', upData, error);
     if(error) throw error;
+    if(!upData || upData.length === 0){
+      showAlert('⚠️ 업데이트 권한 없음 (RLS 정책 확인 필요)\nSupabase 대시보드에서 profiles UPDATE 정책을 확인하세요.');
+      return;
+    }
     showAlert(`✅ ${email} 만료일이 ${days}일 연장되었습니다.\n새 만료일: ${from.toLocaleDateString('ko-KR')}`);
     await renderAdmin();
   } catch(e) {
     showAlert('오류: ' + e.message);
+    console.error('extendExpiry 오류:', e);
   }
 }
 
@@ -1606,8 +1612,13 @@ async function setPlan(userId, currentPlan, email){
   const planIdx = parseInt(input);
   if(isNaN(planIdx) || planIdx < 0 || planIdx > 3) { showAlert('잘못된 입력입니다.'); return; }
   const newPlan = plans[planIdx];
-  const { error } = await sb.from('profiles').update({ plan: newPlan }).eq('id', userId);
+  const { data: upData2, error } = await sb.from('profiles').update({ plan: newPlan }).eq('id', userId).select();
+  console.log('setPlan 결과:', upData2, error);
   if(error) { showAlert('오류: ' + error.message); return; }
+  if(!upData2 || upData2.length === 0){
+    showAlert('⚠️ 플랜 업데이트 권한 없음 (RLS 정책 확인 필요)');
+    return;
+  }
   showAlert(`✅ ${email} 플랜이 ${labels[planIdx]}로 변경되었습니다.`);
   await renderAdmin();
 }
