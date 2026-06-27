@@ -1099,28 +1099,39 @@ function renderFinance(){
     const avgMargin=yd.reduce((s,r)=>s+(r.marginRate||0),0)/yd.length;
     return{year:y,totRev,totProfit,totExp1,totExp2,avgMargin,months:yd.length,avgRev:totRev/yd.length};
   });
-  const displayYear=finYear||years[years.length-1];
-  const cur=yStats.find(s=>s.year===displayYear)||yStats[yStats.length-1];
-  const prevIdx=yStats.findIndex(s=>s.year===cur.year)-1;
-  const prev=prevIdx>=0?yStats[prevIdx]:null;
-  const revYoy=prev&&prev.totRev>0?(cur.totRev-prev.totRev)/prev.totRev*100:null;
-  const profitYoy=prev?(cur.totProfit-prev.totProfit):null;
-  const marginYoyP=prev?(cur.avgMargin-prev.avgMargin)*100:null;
+  // 전체 탭이면 전체 기간 합산, 특정 연도 탭이면 해당 연도
+  let cur, prev=null, revYoy=null, profitYoy=null, marginYoyP=null;
+  if(!finYear){
+    // 전체 탭: 전체 기간 합산
+    const allTotRev=raw.reduce((s,r)=>s+(r.totalRevenue||0),0);
+    const allTotProfit=raw.reduce((s,r)=>s+(r.operatingProfit||0),0);
+    const allTotExp1=raw.reduce((s,r)=>s+(r.totalExp1||0),0);
+    const allTotExp2=raw.reduce((s,r)=>s+(r.purchase||0),0);
+    const allAvgMargin=raw.reduce((s,r)=>s+(r.marginRate||0),0)/raw.length;
+    cur={year:'전체',totRev:allTotRev,totProfit:allTotProfit,totExp1:allTotExp1,totExp2:allTotExp2,avgMargin:allAvgMargin,months:raw.length,avgRev:allTotRev/raw.length};
+  } else {
+    cur=yStats.find(s=>s.year===finYear)||yStats[yStats.length-1];
+    const prevIdx=yStats.findIndex(s=>s.year===cur.year)-1;
+    prev=prevIdx>=0?yStats[prevIdx]:null;
+    revYoy=prev&&prev.totRev>0?(cur.totRev-prev.totRev)/prev.totRev*100:null;
+    profitYoy=prev?(cur.totProfit-prev.totProfit):null;
+    marginYoyP=prev?(cur.avgMargin-prev.avgMargin)*100:null;
+  }
   document.getElementById('finKpiRow').innerHTML=[
-    {label:'연 매출액',val:fmtM(cur.totRev)+'원',color:C.blue,sub:cur.year+'년 합계'},
-    {label:'연 영업이익',val:fmtM(cur.totProfit)+'원',color:cur.totProfit>=0?C.green:C.red,sub:cur.totProfit>=0?'흑자':'적자'},
+    {label:finYear?'연 매출액':'전체 누적 매출',val:fmtM(cur.totRev)+'원',color:C.blue,sub:finYear?cur.year+'년 합계':raw[0]?.month+'~'+raw[raw.length-1]?.month},
+    {label:finYear?'연 영업이익':'전체 누적 영업이익',val:fmtM(cur.totProfit)+'원',color:cur.totProfit>=0?C.green:C.red,sub:cur.totProfit>=0?'흑자':'적자'},
     {label:'월평균 순수익률',val:fmtPct(cur.avgMargin),color:cur.avgMargin>=0?C.teal:C.red,sub:'월 평균 기준'},
     {label:'월평균 매출',val:fmtM(cur.avgRev)+'원',color:C.purple,sub:cur.months+'개월 평균'},
   ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
   document.getElementById('fin-rev-val').textContent=fmtM(cur.totRev)+'원';
   document.getElementById('fin-rev-yoy').className='fin-yoy '+(revYoy==null?'':revYoy>=0?'pos':'neg');
-  document.getElementById('fin-rev-yoy').innerHTML=revYoy!=null?`${revYoy>=0?'▲':'▼'} 전년대비 ${revYoy>=0?'+':''}${revYoy.toFixed(1)}%`:'(전년 데이터 없음)';
-  document.getElementById('fin-rev-sub').textContent=cur.year+'년 기준';
+  document.getElementById('fin-rev-yoy').innerHTML=revYoy!=null?`${revYoy>=0?'▲':'▼'} 전년대비 ${revYoy>=0?'+':''}${revYoy.toFixed(1)}%`:finYear?'(전년 데이터 없음)':'전체 기간 합산';
+  document.getElementById('fin-rev-sub').textContent=finYear?cur.year+'년 기준':'전체 기간';
   document.getElementById('fin-profit-val').style.color=cur.totProfit>=0?C.green:C.red;
   document.getElementById('fin-profit-val').textContent=fmtM(cur.totProfit)+'원';
   document.getElementById('fin-profit-yoy').className='fin-yoy '+(cur.totProfit>=0?'pos':'neg');
-  document.getElementById('fin-profit-yoy').innerHTML=prev?(cur.totProfit>=0&&prev.totProfit<0?'▲ 흑자전환':profitYoy>=0?`▲ +${fmtM(profitYoy)}원`:`▼ ${fmtM(profitYoy)}원`):'';
-  document.getElementById('fin-profit-sub').textContent=cur.year+'년 기준';
+  document.getElementById('fin-profit-yoy').innerHTML=prev?(cur.totProfit>=0&&prev.totProfit<0?'▲ 흑자전환':profitYoy>=0?`▲ +${fmtM(profitYoy)}원`:`▼ ${fmtM(profitYoy)}원`):finYear?'':`${raw.length}개월 누적`;
+  document.getElementById('fin-profit-sub').textContent=finYear?cur.year+'년 기준':'전체 기간';
   document.getElementById('fin-margin-val').style.color=cur.avgMargin>=0?C.teal:C.red;
   document.getElementById('fin-margin-val').textContent=fmtPct(cur.avgMargin);
   document.getElementById('fin-margin-yoy').className='fin-yoy '+(marginYoyP==null?'':marginYoyP>=0?'pos':'neg');
