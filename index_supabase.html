@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>B2B 월별 회계 관리</title>
+<title>B2B 재무현황 관리</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -321,7 +321,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-mark">B2B · ACCOUNTING</div>
-    <div class="logo-name">월별 회계 관리</div>
+    <div class="logo-name">재무현황 관리</div>
   </div>
   <nav>
     <div class="nav-label">분석</div>
@@ -1042,9 +1042,10 @@ function renderDashboard(){
   document.getElementById('dashPeriod').textContent=data[0].month+' ~ '+data[data.length-1].month+' ('+data.length+'개월)';
   const allYears=[...new Set(raw.map(r=>r.month.slice(0,4)))].sort();
   const ysEl=document.getElementById('yearSummary');
-  if(allYears.length>0){
+  const summaryYears=dashYear?[dashYear]:allYears;
+  if(summaryYears.length>0){
     ysEl.style.display='block';
-    const yData=allYears.map(y=>{
+    const yData=summaryYears.map(y=>{
       const yd=raw.filter(r=>r.month.startsWith(y));
       const tot=yd.reduce((s,r)=>s+(r.totalRevenue||0),0);
       const oc=yd.reduce((s,r)=>s+(r.ownerclan||0),0);
@@ -1055,8 +1056,10 @@ function renderDashboard(){
     function yoyBadgeSmall(cur,prev){if(!prev||prev===0)return '';const pct=(cur-prev)/prev*100;const cls=pct>=0?'ys-up':'ys-dn';return`<span class="ys-badge ${cls}">${pct>=0?'+':''}${pct.toFixed(0)}%</span>`;}
     function shareBadge(val,tot){if(!tot)return '';return`<span style="font-size:10px;color:var(--text3);margin-left:3px;">${(val/tot*100).toFixed(0)}%</span>`;}
     const sumTot=yData.reduce((s,d)=>s+d.tot,0),sumOc=yData.reduce((s,d)=>s+d.oc,0),sumDk=yData.reduce((s,d)=>s+d.dk,0),sumCp=yData.reduce((s,d)=>s+d.cp,0);
+    const totalRow=dashYear?'':
+      `<tr style="background:var(--bg3);border-top:1px solid var(--border2);"><td style="font-weight:700;">합계</td><td class="total-col" style="font-weight:700;">${fmtM(sumTot)}원</td><td class="oc-col" style="font-weight:700;">${fmtM(sumOc)}원${shareBadge(sumOc,sumTot)}</td><td class="dk-col" style="font-weight:700;">${fmtM(sumDk)}원${shareBadge(sumDk,sumTot)}</td><td class="cp-col" style="font-weight:700;">${fmtM(sumCp)}원${shareBadge(sumCp,sumTot)}</td></tr>`;
     const ysRows=yData.map((d,i)=>{const prev=i>0?yData[i-1]:null;const prevYd=prev?raw.filter(r=>r.month.startsWith(prev.year)):[];const showYoy=prev&&prevYd.length>=12;return`<tr><td>${d.year}년 <span style="font-size:10px;color:var(--text3);">${raw.filter(r=>r.month.startsWith(d.year)).length}개월</span></td><td class="total-col">${fmtM(d.tot)}원 ${showYoy?yoyBadgeSmall(d.tot,prev.tot):''}</td><td class="oc-col">${fmtM(d.oc)}원${shareBadge(d.oc,d.tot)} ${showYoy?yoyBadgeSmall(d.oc,prev.oc):''}</td><td class="dk-col">${fmtM(d.dk)}원${shareBadge(d.dk,d.tot)} ${showYoy?yoyBadgeSmall(d.dk,prev.dk):''}</td><td class="cp-col">${fmtM(d.cp)}원${shareBadge(d.cp,d.tot)} ${showYoy?yoyBadgeSmall(d.cp,prev.cp):''}</td></tr>`;}).join('');
-    ysEl.innerHTML=`<table><thead><tr><th>연도</th><th>전체 매출</th><th style="color:#6c8fff;">오너클랜</th><th style="color:#4ecdc4;">도매꾹</th><th style="color:#fbbf24;">쿠팡</th></tr></thead><tbody>${ysRows}<tr style="background:var(--bg3);border-top:1px solid var(--border2);"><td style="font-weight:700;">합계</td><td class="total-col" style="font-weight:700;">${fmtM(sumTot)}원</td><td class="oc-col" style="font-weight:700;">${fmtM(sumOc)}원${shareBadge(sumOc,sumTot)}</td><td class="dk-col" style="font-weight:700;">${fmtM(sumDk)}원${shareBadge(sumDk,sumTot)}</td><td class="cp-col" style="font-weight:700;">${fmtM(sumCp)}원${shareBadge(sumCp,sumTot)}</td></tr></tbody></table>`;
+    ysEl.innerHTML=`<table><thead><tr><th>연도</th><th>전체 매출</th><th style="color:#6c8fff;">오너클랜</th><th style="color:#4ecdc4;">도매꾹</th><th style="color:#fbbf24;">쿠팡</th></tr></thead><tbody>${ysRows}${totalRow}</tbody></table>`;
   } else { ysEl.style.display='none'; }
   const lastMonth=data[data.length-1]?.month||'';
   const lastStock=data[data.length-1]?.stock||0;
