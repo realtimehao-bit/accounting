@@ -1282,16 +1282,22 @@ function renderFinance(){
   mc('chartFinMargin',{type:'bar',data:{labels:yLabels,datasets:[{label:'마진율',data:yStats.map(s=>s.avgMargin*100),backgroundColor:yStats.map(s=>s.year===cur.year?(s.avgMargin>=0?C.teal:C.red):(s.avgMargin>=0?'rgba(78,205,196,.25)':'rgba(248,113,113,.25)')),borderColor:yStats.map(s=>s.avgMargin>=0?C.teal:C.red),borderWidth:1,borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(2)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(1)+'%'}}}}});
   const stageColors={neg:'rgba(248,113,113,.7)',improve:'rgba(251,191,36,.7)',black:'rgba(74,222,128,.7)'};
   const stageLabel={neg:'적자',improve:'개선',black:'흑자'};
-  const getStage=m=>m>0.05?'black':m>0?'improve':'neg';
+  const getStage=m=>m>0?'black':m>-0.05?'improve':'neg';
   // 성장 단계 차트 - 전체면 전체, 특정 연도면 전체 흐름 유지(맥락 파악용)
   const allStages=yStats.map(s=>({year:s.year,stage:getStage(s.avgMargin),pct:s.avgMargin}));
   const maxAbs=Math.max(...allStages.map(s=>Math.abs(s.pct)),0.01);
-  const stageHtml=allStages.map((s,i)=>`<div class="stage-col" style="${finYear&&s.year!==finYear?'opacity:0.35;':''}">
-    <div class="stage-pct">${fmtPct(s.pct)}</div>
-    <div class="stage-bar" style="height:${Math.max(20,Math.abs(s.pct)/maxAbs*100)}px;background:${stageColors[s.stage]};${finYear&&s.year===finYear?'box-shadow:0 0 0 2px #fff3;':''}"></div>
+  const stageHtml=allStages.map((s,i)=>{
+    // 2022년은 1개월 데이터라 마진율이 극단적 → 참고용 표시
+    const is2022=s.year==='2022';
+    const displayPct=is2022?'참고':'';
+    const barH=is2022?30:Math.max(20,Math.abs(s.pct)/maxAbs*100);
+    return`<div class="stage-col" style="${finYear&&s.year!==finYear?'opacity:0.35;':''}">
+    <div class="stage-pct" style="${is2022?'font-size:10px;color:var(--text3);':''}">${is2022?'(1개월)':fmtPct(s.pct)}</div>
+    <div class="stage-bar" style="height:${barH}px;background:${stageColors[s.stage]};${is2022?'opacity:0.5;':''}${finYear&&s.year===finYear?'box-shadow:0 0 0 2px #fff3;':''}"></div>
     <div class="stage-label" style="background:${stageColors[s.stage]}22;color:${stageColors[s.stage].replace('.7)','.9)')};">${stageLabel[s.stage]}</div>
-    <div class="stage-year">${s.year}년</div>
-  </div>${i<allStages.length-1?'<div class="stage-arrow">→</div>':''}`).join('');
+    <div class="stage-year">${s.year}년${is2022?' <span style="font-size:9px;color:var(--text3);">(1개월)</span>':''}</div>
+  </div>${i<allStages.length-1?'<div class="stage-arrow">→</div>':''}`;
+  }).join('');
   document.getElementById('stageWrap').innerHTML=stageHtml;
   // 하단 테이블 - 전체면 전체 연도, 특정 연도면 해당 연도만 표시 (전년대비는 raw에서 계산)
   const tableStats=finYear?yStats.filter(s=>s.year===finYear):yStats;
@@ -1301,7 +1307,7 @@ function renderFinance(){
     const revYoy2=prevS&&prevS.totRev>0?(s.totRev-prevS.totRev)/prevS.totRev*100:null;
     const profitYoy2=prevS?(s.totProfit-prevS.totProfit)/Math.abs(prevS.totProfit||1)*100:null;
     const marginYoyP2=prevS?(s.avgMargin-prevS.avgMargin)*100:null;
-    return`<tr><td>${s.year}년 <span style="font-size:10px;color:var(--text3);">(${s.months}개월)</span></td><td>${fmtM(s.totRev)}원</td><td>${yoyBadge(revYoy2)}</td><td style="color:${s.totProfit>=0?C.green:C.red}">${fmtM(s.totProfit)}원</td><td>${yoyBadge(profitYoy2)}</td><td>${fmtPct(s.avgMargin)}</td><td>${marginYoyP2!=null?`<span class="${marginYoyP2>=0?'pos':'neg'}">${marginYoyP2>=0?'+':''}${marginYoyP2.toFixed(1)}p</span>`:'-'}</td><td>${fmtM(s.avgRev)}원</td><td>${fmtM(s.totExp1+s.totExp2)}원</td></tr>`;
+    const is2022row=s.year==='2022';return`<tr${is2022row?' style="opacity:0.8;"':''}><td>${s.year}년 <span style="font-size:10px;color:var(--text3);">(${s.months}개월${is2022row?' · 참고':''}</span></td><td>${fmtM(s.totRev)}원</td><td>${yoyBadge(revYoy2)}</td><td style="color:${s.totProfit>=0?C.green:C.red}">${fmtM(s.totProfit)}원</td><td>${yoyBadge(profitYoy2)}</td><td>${fmtPct(s.avgMargin)}</td><td>${marginYoyP2!=null?`<span class="${marginYoyP2>=0?'pos':'neg'}">${marginYoyP2>=0?'+':''}${marginYoyP2.toFixed(1)}p</span>`:'-'}</td><td>${fmtM(s.avgRev)}원</td><td>${fmtM(s.totExp1+s.totExp2)}원</td></tr>`;
   }).join('');
   document.getElementById('finTableBody').innerHTML=tbody;
 }
