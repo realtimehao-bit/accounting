@@ -1177,8 +1177,7 @@ function renderDashboard(){
     {label:'총 매출',val:fmtM(totRev),color:C.blue,sub:''},
     {label:'운영 지출-1',val:fmtM(totExp1),color:C.red,sub:''},
     {label:'사입 지출-2',val:fmtM(totExp2),color:C.amber,sub:''},
-    {label:'영업이익 (현금기준)',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red,sub:'매출 - 운영비 - 사입 전액'},
-    {label:'영업이익 (재고포함)',val:fmtM(profitWithStockDash),color:profitWithStockDash>=0?C.green:C.red,sub:'현금기준 + 재고자산'},
+    {label:'영업이익',val:fmtM(profitWithStockDash),color:profitWithStockDash>=0?C.green:C.red,sub:'재고 자산 반영한 실질 손익'},
     {label:'평균 마진율',val:fmtPct(avgMargin),color:avgMargin>=0?C.teal:C.red,sub:''},
     {label:`실재고 (${lastMonth})`,val:fmtM(lastStock),color:C.purple,sub:'해당 기간 마지막 월'},
   ];
@@ -1239,18 +1238,17 @@ function renderFinance(){
   const profitWithStock=cur.totProfit+totalStockAll;
   document.getElementById('finKpiRow').innerHTML=[
     {label:finYear?'연 매출액':'전체 누적 매출',val:fmtM(cur.totRev)+'원',color:C.blue,sub:finYear?cur.year+'년 합계':raw[0]?.month+'~'+raw[raw.length-1]?.month},
-    {label:finYear?'연 영업이익 (현금기준)':'누적 영업이익 (현금기준)',val:fmtM(cur.totProfit)+'원',color:cur.totProfit>=0?C.green:C.red,sub:'사입 전액 비용 처리 기준'},
-    {label:finYear?'연 영업이익 (재고포함)':'누적 영업이익 (재고포함)',val:fmtM(profitWithStock)+'원',color:profitWithStock>=0?C.green:C.red,sub:'재고를 자산으로 인정한 기준'},
+    {label:finYear?'연 영업이익':'누적 영업이익',val:fmtM(profitWithStock)+'원',color:profitWithStock>=0?C.green:C.red,sub:'재고 자산 반영한 실질 손익'},
     {label:'월평균 매출',val:fmtM(cur.avgRev)+'원',color:C.purple,sub:cur.months+'개월 평균'},
   ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
   document.getElementById('fin-rev-val').textContent=fmtM(cur.totRev)+'원';
   document.getElementById('fin-rev-yoy').className='fin-yoy '+(revYoy==null?'':revYoy>=0?'pos':'neg');
   document.getElementById('fin-rev-yoy').innerHTML=revYoy!=null?`${revYoy>=0?'▲':'▼'} 전년대비 ${revYoy>=0?'+':''}${revYoy.toFixed(1)}%`:finYear?'(전년 데이터 없음)':'전체 기간 합산';
   document.getElementById('fin-rev-sub').textContent=finYear?cur.year+'년 기준':'전체 기간';
-  document.getElementById('fin-profit-val').style.color=cur.totProfit>=0?C.green:C.red;
-  document.getElementById('fin-profit-val').textContent=fmtM(cur.totProfit)+'원';
-  document.getElementById('fin-profit-yoy').className='fin-yoy '+(cur.totProfit>=0?'pos':'neg');
-  document.getElementById('fin-profit-yoy').innerHTML=prev?(cur.totProfit>=0&&prev.totProfit<0?'▲ 흑자전환':profitYoy>=0?`▲ +${fmtM(profitYoy)}원`:`▼ ${fmtM(profitYoy)}원`):finYear?'':`${raw.length}개월 누적`;
+  document.getElementById('fin-profit-val').style.color=profitWithStock>=0?C.green:C.red;
+  document.getElementById('fin-profit-val').textContent=fmtM(profitWithStock)+'원';
+  document.getElementById('fin-profit-yoy').className='fin-yoy '+(profitWithStock>=0?'pos':'neg');
+  document.getElementById('fin-profit-yoy').innerHTML=finYear?'재고 자산 반영 기준':`${raw.length}개월 누적`;
   document.getElementById('fin-profit-sub').textContent=finYear?cur.year+'년 기준':'전체 기간';
   document.getElementById('fin-margin-val').style.color=cur.avgMargin>=0?C.teal:C.red;
   document.getElementById('fin-margin-val').textContent=fmtPct(cur.avgMargin);
