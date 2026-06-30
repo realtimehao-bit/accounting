@@ -1060,7 +1060,7 @@ function mc(id,cfg){
 }
 
 // ── NAV ──
-const VIEWS=['dashboard','finance','purchase','trend','cost','margin','platform','ledger','input','import','admin'];
+const VIEWS=['dashboard','finance','invest','purchase','trend','cost','margin','platform','ledger','input','import','admin'];
 function showView(n){
   if(n==='invest') setTimeout(renderInvest,50);
   VIEWS.forEach(v=>document.getElementById('view-'+v)?.classList.toggle('active',v===n));
