@@ -427,6 +427,12 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 
   <!-- STEP 1 -->
   <div style="margin-bottom:20px;">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;padding:8px 12px;background:var(--bg3);border-radius:6px;border-left:3px solid var(--accent);">
+      📌 연도 탭은 아래 차트 및 테이블에 적용됩니다. STEP 1~3 카드는 전체 기간 기준입니다.
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;padding:8px 12px;background:var(--bg3);border-radius:6px;border-left:3px solid var(--accent);">
+      📌 연도 탭은 아래 차트 및 테이블에 적용됩니다. STEP 1~3 카드는 전체 기간 기준입니다.
+    </div>
     <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.08em;margin-bottom:8px;padding-left:2px;">STEP 1 · 사업에 얼마가 들어갔나</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
       <div class="fin-card">
@@ -1406,7 +1412,7 @@ function renderInvest(){
         `<span style="color:#f87171">미회수 ${fmtM(remaining)}원 → 현재 재고로 존재</span>`;
 
   if(document.getElementById('investStockVal'))
-    document.getElementById('investStockVal').textContent=fmtM(totalStock)+'원';
+    document.getElementById('investStockVal').textContent=fmtM(Math.abs(totalProfit))+'원';
 
   // ── 차트 ──
   const chartData=investYear?bepData.filter(d=>d.month.startsWith(investYear)):bepData;
@@ -1428,10 +1434,9 @@ function renderInvest(){
     const ySurplus=yData.reduce((s,d)=>s+d.surplus,0);
     cumul2+=yProfit;
     cumInvest+=yInvest;
-    // 12월 마감 실재고
-    const decRow=sortedRaw.find(r=>r.month===y+'-12')||sortedRaw.filter(r=>r.month.startsWith(y)).pop();
-    const yStockCumul=sortedRaw.filter(r=>r.month<=decRow?.month).reduce((s,r)=>s+(r.stock||0),0);
-    return{year:y,rev:yRev,exp:yExp,profit:yProfit,invest:yInvest,surplus:ySurplus,cumProfit:cumul2,cumInvest,stock:yStockCumul};
+    // 해당 연도까지 누적 지출-매출 차액 (재고 자산 추정)
+    const yStockDiff=Math.abs(cumul2); // 누적 영업이익이 음수면 그 절댓값이 재고로 존재
+    return{year:y,rev:yRev,exp:yExp,profit:yProfit,invest:yInvest,surplus:ySurplus,cumProfit:cumul2,cumInvest,stock:yStockDiff};
   });
 
   let ytHTML=`<table><thead><tr>
@@ -1466,7 +1471,7 @@ function renderInvest(){
     <td style="color:${latestCumul>=0?C.green:'#f87171'}">${fmtM(latestCumul)}원 (현재)</td>
     <td style="color:#fbbf24">${fmtM(totalInvest)}원</td>
 
-    <td style="color:${C.amber}">${fmtM(totalStock)}원 (현재)</td>
+    <td style="color:${C.amber}">${fmtM(Math.abs(latestCumul))}원</td>
   </tr>`;
   ytHTML+='</tbody></table>';
   document.getElementById('investYearTable').innerHTML=ytHTML;
@@ -1475,23 +1480,29 @@ function renderInvest(){
   const recent3=bepData.slice(-3);
   const avgProfit=recent3.reduce((s,d)=>s+d.profit,0)/(recent3.length||1);
 
+  const baseYear=new Date().getFullYear(); // 현재 연도
   const predRows=[1,2,3].map(yr=>{
     const mos=yr*12;
     const fut=latestCumul+(avgProfit*mos);
+    const targetYear=baseYear+yr;
+    // 운영 BEP: 누적 영업이익 >= 0
+    const bepOk=fut>=0;
+    // 투자금 회수: 누적 영업이익 >= 투자자 실투자금
+    const investOk=fut>=totalInvest;
     return`<tr>
-      <td style="font-weight:600">${yr}년 후</td>
-      <td style="color:var(--text2)">${mos}개월</td>
+      <td style="font-weight:600">${targetYear}년</td>
+      <td style="color:var(--text2)">${mos}개월 후</td>
       <td style="color:${C.blue}">${fmtM(avgProfit)}원/월</td>
       <td style="color:${fut>=0?C.green:'#f87171'}">${fmtM(fut)}원</td>
-      <td style="color:${fut>=0?C.green:'#f87171'};font-weight:600">${fut>=0?'✅ 달성':'❌ 미달성'}</td>
-      <td style="color:${(fut+totalInvest)>=totalInvest?C.green:'#f87171'};font-weight:600">${(fut+totalInvest)>=0?'✅ 전액회수':'❌ 미회수'}</td>
+      <td style="color:${bepOk?C.green:'#f87171'};font-weight:600">${bepOk?'✅ 달성':'❌ 미달성'}</td>
+      <td style="color:${investOk?C.green:'#f87171'};font-weight:600">${investOk?'✅ 전액회수':'❌ 미회수 ('+fmtM(totalInvest-fut)+'원 부족)'}</td>
     </tr>`;
   });
 
   document.getElementById('investPredSection').innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;">
-        <div style="font-size:10px;color:var(--text3)">최근 3개월 월평균 영업이익</div>
+        <div style="font-size:10px;color:var(--text3)">최근 3개월 월평균 영업이익<br><span style="font-size:9px;">매출 - 운영비 - 사입비 + 재고 기준</span></div>
         <div style="font-size:16px;font-weight:700;color:${avgProfit>=0?C.blue:'#f87171'};margin-top:4px">${fmtM(avgProfit)}원</div>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;">
