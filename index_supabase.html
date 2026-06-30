@@ -1519,16 +1519,69 @@ function renderInvest(){
           </div>
         </div>
         <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:6px;">
-          <div>
-            <div style="color:var(--text2);font-weight:600;">📦 투자자 미회수 잔액 <span style="font-size:10px;color:var(--text3);">(투자자 회수 대상 금액)</span></div>
-            <div style="font-size:10px;color:var(--text3);margin-top:3px;">현재 창고 재고로 존재 · 판매될수록 투자자에게 회수 가능</div>
+        <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+        <!-- 투자자 미회수 잔액 - 클릭시 상세 펼침 -->
+        <div style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:6px;overflow:hidden;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;"
+               onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.inv-toggle').textContent=d.style.display==='none'?'▶ 상세보기':'▼ 접기';">
+            <div>
+              <div style="color:var(--text2);font-weight:600;">📦 투자자 미회수 잔액</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px;">현재 재고 자산으로 존재 · 클릭하면 상세 내역</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:#f87171;font-weight:700;font-size:17px;">${fmtM(Math.abs(latestCumul))}원</span>
+              <span class="inv-toggle" style="font-size:10px;color:var(--text3);">▶ 상세보기</span>
+            </div>
           </div>
-          <span style="color:#f87171;font-weight:700;font-size:17px;">${fmtM(Math.abs(latestCumul))}원</span>
-        </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:0 4px;line-height:1.6;">
-          ※ 이 금액은 사라진 돈이 아니라 현재 재고 자산으로 남아있습니다.<br>
-          재고가 판매될수록 투자자 회수금이 확보되며, 사업 종료 시 재고 처분 금액으로 정산됩니다.
+
+          <!-- 펼쳐지는 상세 내역 -->
+          <div style="display:none;padding:0 12px 14px;">
+
+            <!-- 투자자 관점 -->
+            <div style="margin-bottom:12px;">
+              <div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:8px;letter-spacing:.05em;">👤 투자자 관점</div>
+              <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(248,113,113,.08);border-radius:4px;">
+                  <span style="color:var(--text2);">투자자 미회수 잔액</span>
+                  <span style="color:#f87171;font-weight:600;">${fmtM(Math.abs(latestCumul))}원</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(74,222,128,.08);border-radius:4px;">
+                  <span style="color:var(--text2);">법인 대출로 회수한 금액</span>
+                  <span style="color:#4ade80;font-weight:600;">- 1억 6,000만원</span>
+                </div>
+                <div style="height:1px;background:var(--border);margin:2px 0;"></div>
+                <div style="display:flex;justify-content:space-between;padding:8px 10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);border-radius:4px;">
+                  <span style="color:var(--text2);font-weight:600;">실제 추가 미회수 잔액</span>
+                  <span style="color:#60a5fa;font-weight:700;font-size:14px;">${fmtM(Math.abs(latestCumul)-160000000)}원</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 회사 관점 -->
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:8px;letter-spacing:.05em;">🏢 회사 관점</div>
+              <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(96,165,250,.08);border-radius:4px;">
+                  <span style="color:var(--text2);">투자자에게 줘야 할 금액</span>
+                  <span style="color:#60a5fa;font-weight:600;">${fmtM(Math.abs(latestCumul)-160000000)}원</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:rgba(251,191,36,.08);border-radius:4px;">
+                  <span style="color:var(--text2);">법인 대출 상환 의무</span>
+                  <span style="color:#fbbf24;font-weight:600;">+ 1억 6,000만원</span>
+                </div>
+                <div style="height:1px;background:var(--border);margin:2px 0;"></div>
+                <div style="display:flex;justify-content:space-between;padding:8px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:4px;">
+                  <span style="color:var(--text2);font-weight:600;">회사 실질 부담 합계</span>
+                  <span style="color:#f87171;font-weight:700;font-size:14px;">${fmtM(Math.abs(latestCumul))}원</span>
+                </div>
+                <div style="font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6;">
+                  ※ 회사 실질 부담 = 현재 재고 자산 ${fmtM(Math.abs(latestCumul))}원과 정확히 일치<br>
+                  재고가 전부 판매되면 투자자 정산 + 대출 상환 모두 해결 가능
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>`:''
