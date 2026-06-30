@@ -1164,16 +1164,21 @@ function renderDashboard(){
   } else { ysEl.style.display='none'; }
   const lastMonth=data[data.length-1]?.month||'';
   const lastStock=data[data.length-1]?.stock||0;
+  // 선택 기간 재고 합산 (연도 탭 필터 적용)
+  const periodStock=data.reduce((s,r)=>s+(r.stock||0),0);
+  // 전체 누적 실재고 (항상 전체)
   const totalStock=raw.reduce((s,r)=>s+(r.stock||0),0);
+  // 재고포함 영업이익 = 선택 기간 영업이익 + 선택 기간 재고
+  const profitWithStockDash=totProfit+periodStock;
   document.getElementById('kpiGrid').innerHTML=[
     {label:'총 매출',val:fmtM(totRev),color:C.blue,sub:''},
     {label:'운영 지출-1',val:fmtM(totExp1),color:C.red,sub:''},
     {label:'사입 지출-2',val:fmtM(totExp2),color:C.amber,sub:''},
-    {label:'영업이익(현금기준)',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red,sub:'사입 전액 비용 처리'},
-    {label:'영업이익(재고포함)',val:fmtM(totProfit+totalStock),color:(totProfit+totalStock)>=0?C.green:C.red,sub:'재고를 자산으로 인정'},
+    {label:'영업이익 (현금기준)',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red,sub:'사입 전액 비용 처리'},
+    {label:'영업이익 (재고포함)',val:fmtM(profitWithStockDash),color:profitWithStockDash>=0?C.green:C.red,sub:'재고를 자산으로 인정'},
     {label:'평균 마진율',val:fmtPct(avgMargin),color:avgMargin>=0?C.teal:C.red,sub:''},
     {label:`실재고 (${lastMonth})`,val:fmtM(lastStock),color:C.purple,sub:'최근 월 기준'},
-    {label:'누적 실재고',val:fmtM(totalStock),color:C.purple,sub:'전체 기간 합계'},
+    {label:'누적 실재고 (전체)',val:fmtM(totalStock),color:C.purple,sub:'전체 기간 합계'},
   ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
   const labels=data.map(r=>r.month.slice(2));
   const profits=data.map(r=>r.operatingProfit||0);
@@ -1220,8 +1225,9 @@ function renderFinance(){
     marginYoyP=prev?(cur.avgMargin-prev.avgMargin)*100:null;
   }
   // 재고 포함 영업이익 계산 (전체 누적 실재고 합산)
-  const totalStockAll=!finYear?raw.reduce((s,r)=>s+(r.stock||0),0):
-    raw.filter(r=>r.month.startsWith(finYear)).reduce((s,r)=>s+(r.stock||0),0);
+  // 선택 기간(연도 or 전체) 재고 합산
+  const filteredForStock=finYear?raw.filter(r=>r.month.startsWith(finYear)):raw;
+  const totalStockAll=filteredForStock.reduce((s,r)=>s+(r.stock||0),0);
   const profitWithStock=cur.totProfit+totalStockAll;
   document.getElementById('finKpiRow').innerHTML=[
     {label:finYear?'연 매출액':'전체 누적 매출',val:fmtM(cur.totRev)+'원',color:C.blue,sub:finYear?cur.year+'년 합계':raw[0]?.month+'~'+raw[raw.length-1]?.month},
