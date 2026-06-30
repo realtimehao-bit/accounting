@@ -419,7 +419,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
 </div>
 
 <!-- ── 투자 분석 ── -->
-<div id="view-invest" class="view" style="display:none;">
+<div id="view-invest" class="view">
   <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div><div class="page-title">투자 분석</div><div class="page-sub">투자자 실투자금 · 운영 손익분기점 · 재고 투자 커버 손익분기점</div></div>
     <div id="investYearTabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
@@ -1062,10 +1062,9 @@ function mc(id,cfg){
 // ── NAV ──
 const VIEWS=['dashboard','finance','invest','purchase','trend','cost','margin','platform','ledger','input','import','admin'];
 function showView(n){
-  if(n==='invest') setTimeout(renderInvest,50);
   VIEWS.forEach(v=>document.getElementById('view-'+v)?.classList.toggle('active',v===n));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.getAttribute('onclick')===`showView('${n}')`));
-  const renderers={dashboard:renderDashboard,finance:renderFinance,purchase:renderPurchase,trend:renderTrend,cost:renderCost,margin:renderMargin,platform:renderPlatform,ledger:renderLedger,admin:renderAdmin};
+  const renderers={dashboard:renderDashboard,finance:renderFinance,invest:renderInvest,purchase:renderPurchase,trend:renderTrend,cost:renderCost,margin:renderMargin,platform:renderPlatform,ledger:renderLedger,admin:renderAdmin};
   (renderers[n]||(() => {}))();
 }
 
