@@ -1164,6 +1164,22 @@ function renderDashboard(){
   } else { ysEl.style.display='none'; }
   const lastMonth=data[data.length-1]?.month||'';
   const lastStock=data[data.length-1]?.stock||0;
+  // 실재고 라벨: 2022년은 마지막 월 기준, 그 외는 1월~12월 기간 표시
+  const firstMonth=data[0]?.month||'';
+  const stockLabel=(()=>{
+    if(!dashYear) return '';
+    const firstMo=firstMonth.slice(5,7);
+    const lastMo=lastMonth.slice(5,7);
+    if(firstMo===lastMo) return `실재고 (${dashYear}-${lastMo})`;
+    return `실재고 (${dashYear}년 ${parseInt(firstMo)}~${parseInt(lastMo)}월)`;
+  })();
+  const stockSub=(()=>{
+    if(!dashYear) return '';
+    const firstMo=firstMonth.slice(5,7);
+    const lastMo=lastMonth.slice(5,7);
+    if(firstMo===lastMo) return '해당 기간 마지막 월';
+    return '해당 기간 누적';
+  })();
   // 선택 기간 재고 합산
   const periodStock=data.reduce((s,r)=>s+(r.stock||0),0);
   // 전체 누적 실재고 (전체 탭일때만 표시)
@@ -1179,8 +1195,11 @@ function renderDashboard(){
     {label:'사입 지출-2',val:fmtM(totExp2),color:C.amber,sub:''},
     {label:'영업이익',val:fmtM(profitWithStockDash),color:profitWithStockDash>=0?C.green:C.red,sub:'재고 자산 반영한 실질 손익'},
     {label:'평균 마진율',val:fmtPct(avgMargin),color:avgMargin>=0?C.teal:C.red,sub:''},
-    {label:`실재고 (${lastMonth})`,val:fmtM(lastStock),color:C.purple,sub:'해당 기간 마지막 월'},
   ];
+  // 연도 탭일 때 실재고 카드 추가 (동적 라벨)
+  if(dashYear){
+    kpiItems.push({label:stockLabel,val:fmtM(periodStock),color:C.purple,sub:stockSub});
+  }
   // 전체 탭일 때만 누적 실재고 추가
   if(!dashYear){
     kpiItems.push({label:'누적 실재고 (전체)',val:fmtM(totalStock),color:C.purple,sub:'전체 기간 합계'});
