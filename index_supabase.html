@@ -509,7 +509,7 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
   <!-- 연도별 투자금 테이블 -->
   <div class="fin-card" style="margin-bottom:16px;">
     <div class="fin-card-title">📅 연도별 투자 현황</div>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">각 연도 12월 마감 기준 누적 영업이익과 실재고 금액, 그 해 투자자 추정 투입금을 보여줍니다.</div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">연도별 해당연도 손익과 누적 손익, 투자자 추정 투입금을 보여줍니다.</div>
     <div id="investYearTable"></div>
   </div>
 
@@ -1440,8 +1440,8 @@ function renderInvest(){
     <th>연도</th>
     <th>연도 매출</th>
     <th>연도 지출<br><span style="font-size:9px;color:var(--text3)">운영비+사입</span></th>
-    <th>연도 영업이익</th>
-    <th>누적 영업이익</th>
+    <th>해당연도 손익</th>
+    <th>누적 손익<br><span style="font-size:9px;color:var(--text3)">시작~해당연도</span></th>
     <th>투자자 투입 추정<br><span style="font-size:9px;color:var(--text3)">지출>매출인 달 합산</span></th>
 
     <th>실재고 누적<br><span style="font-size:9px;color:var(--text3)">12월 마감 기준</span></th>
@@ -1480,20 +1480,55 @@ function renderInvest(){
       <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:12px;">💡 투자금 흐름 요약</div>
       <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(248,113,113,.08);border-radius:6px;">
-          <span style="color:var(--text2);">💸 투자자 추정 투입금 <span style="font-size:10px;color:var(--text3);">(지출이 매출 초과한 달 합산)</span></span>
+          <div>
+            <span style="color:var(--text2);">💸 투자자 추정 투입금</span>
+            <span style="font-size:10px;color:var(--text3);margin-left:6px;">지출이 매출 초과한 달 합산 · ${monthData.filter(d=>d.invest>0).length}개월</span>
+          </div>
           <span style="color:#f87171;font-weight:700;">+ ${fmtM(totalInvest)}원</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(74,222,128,.08);border-radius:6px;">
-          <span style="color:var(--text2);">✅ 흑자 달 회수액 <span style="font-size:10px;color:var(--text3);">(매출이 지출 초과한 달 합산)</span></span>
-          <span style="color:#4ade80;font-weight:700;">- ${fmtM(totalSurplus)}원</span>
+        <div style="background:rgba(74,222,128,.08);border-radius:6px;overflow:hidden;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;cursor:pointer;"
+               onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.toggle-icon').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';">
+            <div>
+              <span style="color:var(--text2);">✅ 흑자 달 회수액</span>
+              <span style="font-size:10px;color:var(--text3);margin-left:6px;">매출이 지출 초과한 달 합산 · ${monthData.filter(d=>d.surplus>0).length}개월</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:#4ade80;font-weight:700;">- ${fmtM(totalSurplus)}원</span>
+              <span class="toggle-icon" style="color:var(--text3);font-size:10px;">▶</span>
+            </div>
+          </div>
+          <div style="display:none;padding:0 12px 10px;">
+            <table style="width:100%;font-size:11px;">
+              <thead><tr>
+                <th style="text-align:left;color:var(--text3);padding:4px 0;">연월</th>
+                <th style="text-align:right;color:var(--text3);">매출</th>
+                <th style="text-align:right;color:var(--text3);">지출</th>
+                <th style="text-align:right;color:var(--text3);">흑자액</th>
+              </tr></thead>
+              <tbody>
+                ${monthData.filter(d=>d.surplus>0).map(d=>`
+                  <tr>
+                    <td style="padding:3px 0;color:var(--text2)">${d.month.slice(0,4)}년 ${d.month.slice(5,7)}월</td>
+                    <td style="text-align:right;color:#4ade80">${fmtM(d.rev)}원</td>
+                    <td style="text-align:right;color:#f87171">${fmtM(d.exp)}원</td>
+                    <td style="text-align:right;color:#4ade80;font-weight:600">+${fmtM(d.surplus)}원</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:6px;">
-          <span style="color:var(--text2);font-weight:600;">📦 현재 미회수 잔액 <span style="font-size:10px;color:var(--text3);">(현재 재고 자산으로 존재)</span></span>
-          <span style="color:#fbbf24;font-weight:700;font-size:15px;">${fmtM(Math.abs(latestCumul))}원</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:6px;">
+          <div>
+            <div style="color:var(--text2);font-weight:600;">📦 투자자 미회수 잔액 <span style="font-size:10px;color:var(--text3);">(투자자 회수 대상 금액)</span></div>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;">현재 창고 재고로 존재 · 판매될수록 투자자에게 회수 가능</div>
+          </div>
+          <span style="color:#f87171;font-weight:700;font-size:17px;">${fmtM(Math.abs(latestCumul))}원</span>
         </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:0 4px;">
-          ※ 미회수 잔액은 사라진 돈이 아닙니다. 현재 창고 재고로 남아있으며, 판매될수록 매출로 전환됩니다.
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:0 4px;line-height:1.6;">
+          ※ 이 금액은 사라진 돈이 아니라 현재 재고 자산으로 남아있습니다.<br>
+          재고가 판매될수록 투자자 회수금이 확보되며, 사업 종료 시 재고 처분 금액으로 정산됩니다.
         </div>
       </div>
     </div>`:''
