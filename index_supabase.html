@@ -425,25 +425,74 @@ tr.total-row td{background:var(--bg3);color:var(--text);font-weight:500;border-t
     <div id="investYearTabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
   </div>
 
-  <!-- KPI 카드 3개 -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
-    <div class="fin-card">
-      <div class="fin-card-title">💸 투자자 추정 실투자금</div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.5;">영업이익이 적자였던 달의 적자 합산액입니다.<br>외부에서 채워졌을 최소 투자금 추정값입니다.</div>
-      <div id="investKpi1" style="font-size:22px;font-weight:700;color:#f87171;">-</div>
-      <div id="investKpi1sub" style="font-size:11px;color:var(--text3);margin-top:4px;"></div>
+  <!-- STEP 1 -->
+  <div style="margin-bottom:20px;">
+    <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.08em;margin-bottom:8px;padding-left:2px;">STEP 1 · 사업에 얼마가 들어갔나</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div class="fin-card">
+        <div class="fin-card-title">📤 누적 지출 총액</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">운영비 + 사입비 전체 합산</div>
+        <div id="investStep1Exp" style="font-size:20px;font-weight:700;color:#f87171;">-</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-title">📥 누적 매출 총액</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">전체 기간 매출 합산</div>
+        <div id="investStep1Rev" style="font-size:20px;font-weight:700;color:#4ade80;">-</div>
+      </div>
+      <div class="fin-card" style="border-color:rgba(251,191,36,.4);">
+        <div class="fin-card-title">📦 차액 → 재고로 존재</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">지출이 매출보다 많았던 만큼<br>현재 재고 자산으로 남아있음</div>
+        <div id="investStep1Diff" style="font-size:20px;font-weight:700;color:#fbbf24;">-</div>
+      </div>
     </div>
-    <div class="fin-card">
-      <div class="fin-card-title">📊 운영 손익분기점</div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.5;">매출에서 운영비와 사입비를 뺀 영업이익 기준으로,<br>누적 적자가 흑자로 전환된 시점입니다. 재고 자산은 포함하지 않습니다.</div>
-      <div id="investKpi2" style="font-size:18px;font-weight:700;color:#4ade80;">-</div>
-      <div id="investKpi2sub" style="font-size:11px;color:var(--text3);margin-top:4px;"></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div style="margin-bottom:20px;">
+    <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.08em;margin-bottom:8px;padding-left:2px;">STEP 2 · 그 중 투자자 자금은 얼마인가</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div class="fin-card" style="border-color:rgba(248,113,113,.4);">
+        <div class="fin-card-title">💸 투자자 자금 추정액</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">적자 구간(2022~2024) 누적 손실분<br>이 금액만 외부에서 채워줬을 가능성 있음</div>
+        <div id="investKpi1" style="font-size:20px;font-weight:700;color:#f87171;">-</div>
+        <div id="investKpi1sub" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5;"></div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-title">🔄 영업이익 재투자액</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">사업이 스스로 벌어서 다시 사입에 넣은 돈<br>투자자 자금이 아닌 사업 자체 자금</div>
+        <div id="investStep2Reinvest" style="font-size:20px;font-weight:700;color:#60a5fa;">-</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-title">📊 투자자 자금 비중</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">전체 차액 중 투자자 자금 비율</div>
+        <div id="investStep2Pct" style="font-size:20px;font-weight:700;color:#a78bfa;">-</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">나머지는 사업 수익으로 재투자된 자금</div>
+      </div>
     </div>
-    <div class="fin-card">
-      <div class="fin-card-title">📦 현재 재고 자산</div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.5;">사업이 자체적으로 만들어낸 공동 자산입니다.<br>투자자 투입금은 이미 영업이익으로 전액 회수됐으므로, 이 재고는 투자자 단독 회수 대상이 아닙니다.</div>
-      <div id="investKpi3" style="font-size:18px;font-weight:700;color:#60a5fa;">-</div>
-      <div id="investKpi3sub" style="font-size:11px;color:var(--text3);margin-top:4px;"></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div style="margin-bottom:20px;">
+    <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.08em;margin-bottom:8px;padding-left:2px;">STEP 3 · 투자자 자금은 회수됐나</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div class="fin-card">
+        <div class="fin-card-title">📊 운영 손익분기점</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">누적 영업이익이 0을 넘어선 시점<br>재고 자산 포함하지 않음</div>
+        <div id="investKpi2" style="font-size:18px;font-weight:700;color:#4ade80;">-</div>
+        <div id="investKpi2sub" style="font-size:10px;color:var(--text3);margin-top:6px;"></div>
+      </div>
+      <div class="fin-card" style="border-color:rgba(74,222,128,.4);">
+        <div class="fin-card-title">✅ 투자자 자금 회수 현황</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">영업이익으로 투자자 자금이 회수됐는지</div>
+        <div id="investKpi3" style="font-size:18px;font-weight:700;color:#4ade80;">-</div>
+        <div id="investKpi3sub" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5;"></div>
+      </div>
+      <div class="fin-card" style="border-color:rgba(251,191,36,.3);">
+        <div class="fin-card-title">📦 현재 재고 자산 성격</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">투자자 단독 회수 대상 아님</div>
+        <div id="investStockVal" style="font-size:18px;font-weight:700;color:#fbbf24;">-</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5;">사업이 자체적으로 만든 공동 자산<br>팔리면 추가 매출로 전환되는 운전자본</div>
+      </div>
     </div>
   </div>
 
@@ -1224,11 +1273,16 @@ let investYear='';
 function renderInvest(){
   const raw=getData();
   if(!raw.length){
-    ['investKpi1','investKpi2','investKpi3','investYearTable','investPredSection'].forEach(id=>{
-      const el=document.getElementById(id);if(el)el.innerHTML='<div class="empty">데이터가 없습니다.</div>';
+    ['investStep1Exp','investStep1Rev','investStep1Diff',
+     'investKpi1','investKpi1sub','investStep2Reinvest','investStep2Pct',
+     'investKpi2','investKpi2sub','investKpi3','investKpi3sub',
+     'investStockVal','investYearTable','investPredSection'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.innerHTML='<div class="empty">데이터가 없습니다.</div>';
     });
     return;
   }
+
   const sortedRaw=[...raw].sort((a,b)=>a.month.localeCompare(b.month));
   const allYears=[...new Set(sortedRaw.map(r=>r.month.slice(0,4)))].sort();
 
@@ -1238,126 +1292,145 @@ function renderInvest(){
     tabs.innerHTML=['전체',...allYears].map(y=>`<button onclick="investYear='${y==='전체'?'':y}';renderInvest();" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:${(investYear===''&&y==='전체')||(investYear===y)?'var(--accent)':'var(--bg3)'};color:${(investYear===''&&y==='전체')||(investYear===y)?'#fff':'var(--text2)'};font-size:11px;cursor:pointer;">${y==='전체'?'전체':y+'년'}</button>`).join('');
   }
 
-  // 누적 BEP 계산 (항상 전체 기준)
-  let cumul=0,bep1Month=null,bep2Month=null;
-  const bepData=sortedRaw.map(r=>{
-    cumul+=(r.operatingProfit||0);
-    const stock=r.stock||0;
-    if(!bep1Month&&cumul>=0) bep1Month=r.month;
-    if(!bep2Month&&cumul>=stock&&stock>0) bep2Month=r.month;
-    return{month:r.month,monthly:r.operatingProfit||0,cumulative:cumul,stock,
-      totalExp:(r.totalExp1||0)+(r.purchase||0)};
+  // ── 핵심 계산 (방식1: 영업이익 = 매출 - 운영비 - 사입지출) ──
+  // 월별 계산
+  const monthData=sortedRaw.map(r=>{
+    const rev=r.totalRevenue||0;
+    const exp=(r.totalExp1||0)+(r.purchase||0);
+    const profit=rev-exp; // H-S-V 방식
+    const invest=Math.max(0,exp-rev); // 부족분 = 투자자 투입 추정
+    const surplus=Math.max(0,rev-exp); // 흑자분 = 회수
+    return{month:r.month,rev,exp,profit,invest,surplus,stock:r.stock||0};
   });
 
-  const latestAll=bepData[bepData.length-1];
-  const latestCumul=latestAll?.cumulative||0;
-  const latestStock=latestAll?.stock||0;
-  const gap=latestStock-latestCumul;
+  // 전체 누적
+  const totalRev=monthData.reduce((s,d)=>s+d.rev,0);
+  const totalExp=monthData.reduce((s,d)=>s+d.exp,0);
+  const totalProfit=totalRev-totalExp; // 누적 영업이익 (음수 = 아직 재고로 존재)
+  const totalInvest=monthData.reduce((s,d)=>s+d.invest,0); // 투자자 추정 실투자금
+  const totalSurplus=monthData.reduce((s,d)=>s+d.surplus,0); // 매출로 회수된 금액
+  const totalStock=sortedRaw.reduce((s,r)=>s+(r.stock||0),0); // 누적 실재고
 
-  // 최근 3개월 평균 영업이익
-  const recent3=bepData.slice(-3);
-  const avgProfit=recent3.reduce((s,d)=>s+d.monthly,0)/(recent3.length||1);
+  // 회수 현황
+  const recovered=totalInvest+totalProfit; // 투자금 중 회수된 금액
+  const remaining=totalInvest-recovered; // 아직 미회수 (= 재고로 남은 금액)
+  const reinvestAmt=Math.max(0,totalInvest-Math.abs(totalProfit)); // 영업이익 재투자
+  const investPct=totalInvest>0?(Math.abs(totalProfit)/totalInvest*100):0;
 
-  // 연도별 통계 (12월 마감 기준)
-  const yearStats=allYears.map(y=>{
-    const yData=sortedRaw.filter(r=>r.month.startsWith(y));
-    // 12월 있으면 12월, 없으면 마지막 달
-    const decRow=yData.find(r=>r.month===y+'12')||yData[yData.length-1];
-    const decMonth=decRow?.month||'';
-    const decMo=decMonth.slice(5,7); // YYYY-MM 포맷에서 월 추출
-    const yCumul=bepData.find(d=>d.month===decMonth)?.cumulative||0;
-    const yStock=decRow?.stock||0;
-    // 연도 전체 지출 합산 (운영비+사입비)
-    const yTotalExp=yData.reduce((s,r)=>s+(r.totalExp1||0)+(r.purchase||0),0);
-    // 연도 전체 매출 합산
-    const yTotalRev=yData.reduce((s,r)=>s+(r.totalRevenue||0),0);
-    // 연도 영업이익 합산
-    const yProfit=yData.reduce((s,r)=>s+(r.operatingProfit||0),0);
-    // 투자 추정액 = 지출 - 매출 (적자분만 = 외부 투입 필요 금액)
-    const yInvest=Math.max(0, yTotalExp-yTotalRev);
-    return{year:y,decMo,stock:yStock,cumulative:yCumul,totalExp:yTotalExp,totalRev:yTotalRev,profit:yProfit,invest:yInvest};
+  // BEP (누적 영업이익 기준)
+  let cumul=0, bep1Month=null;
+  const bepData=monthData.map(d=>{
+    cumul+=d.profit;
+    if(!bep1Month&&cumul>=0) bep1Month=d.month;
+    return{...d,cumulative:cumul};
   });
+  const latestCumul=bepData[bepData.length-1]?.cumulative||0;
 
-  // KPI 1: 투자자 추정 실투자금 = 적자 구간 누적 손실 합산
-  const deficitRows=sortedRaw.filter(r=>(r.operatingProfit||0)<0);
-  const totInvestAmt=deficitRows.reduce((s,r)=>s+Math.abs(r.operatingProfit||0),0);
-  const recoveredAmt=Math.min(totInvestAmt, Math.max(0,latestCumul+totInvestAmt));
-  const isFullyRecovered=latestCumul>=0;
-  document.getElementById('investKpi1').textContent=fmtM(totInvestAmt)+'원';
+  // ── STEP 1 ──
+  document.getElementById('investStep1Exp').textContent=fmtM(totalExp)+'원';
+  document.getElementById('investStep1Rev').textContent=fmtM(totalRev)+'원';
+  document.getElementById('investStep1Diff').textContent=fmtM(Math.abs(totalProfit))+'원';
+
+  // ── STEP 2 ──
+  document.getElementById('investKpi1').textContent=fmtM(totalInvest)+'원';
   document.getElementById('investKpi1sub').innerHTML=
-    isFullyRecovered
-      ? `✅ 전액 회수 완료 · 추가 흑자 ${fmtM(latestCumul)}원`
-      : `⚠️ 미회수 잔액 ${fmtM(Math.abs(latestCumul))}원 남음`;
+    `월별 지출이 매출 초과한 달 합산<br>`+
+    `<span style="color:var(--text3)">매출 초과 달수: ${monthData.filter(d=>d.invest>0).length}개월</span>`;
+  document.getElementById('investStep2Reinvest').textContent=fmtM(totalSurplus)+'원';
+  document.getElementById('investStep2Pct').textContent=
+    totalInvest>0?(recovered/totalInvest*100).toFixed(1)+'%':'0%';
 
-  // KPI 2: 운영 BEP
+  // ── STEP 3 ──
   const kpi2el=document.getElementById('investKpi2');
   if(bep1Month){
-    kpi2el.textContent=bep1Month.slice(0,4)+'년 '+bep1Month.slice(4,6)+'월 달성';
+    kpi2el.textContent=bep1Month.slice(0,4)+'년 '+bep1Month.slice(5,7)+'월 달성';
     kpi2el.style.color='#4ade80';
-    document.getElementById('investKpi2sub').textContent='이 시점부터 누적 영업이익이 흑자로 전환됨';
-  }else{
+    document.getElementById('investKpi2sub').textContent='누적 영업이익 흑자 전환 시점';
+  } else {
     kpi2el.textContent='아직 미달성';
     kpi2el.style.color='#f87171';
-    const mos=avgProfit>0?Math.ceil(-latestCumul/avgProfit):null;
-    document.getElementById('investKpi2sub').textContent=mos?`현재 추세라면 약 ${mos}개월 후 달성 예상`:'예측 불가';
+    document.getElementById('investKpi2sub').textContent=`현재 누적 ${fmtM(Math.abs(latestCumul))}원 적자`;
   }
 
-  // KPI 3: 재고 자산 현황 (투자자 회수 대상 아님)
   const kpi3el=document.getElementById('investKpi3');
-  kpi3el.textContent=fmtM(latestStock)+'원';
-  kpi3el.style.color='#60a5fa';
+  kpi3el.textContent=fmtM(recovered)+'원';
+  kpi3el.style.color=recovered>=totalInvest?'#4ade80':'#fbbf24';
   document.getElementById('investKpi3sub').innerHTML=
-    latestCumul>=0
-      ? `✅ 투자자 실투자금 ${fmtM(Math.abs(Math.min(0,latestCumul-latestStock))>0?latestStock:totInvestAmt)}원 전액 회수 완료 · 이 재고는 공동 사업 자산`
-      : `사업 운전자본으로 순환 중인 공동 자산 · 투자자 단독 회수 대상 아님`;
+    recovered>=totalInvest
+      ? `✅ 전액 회수 완료`
+      : `투자금 ${fmtM(totalInvest)}원 중 ${fmtM(recovered)}원 회수<br>`+
+        `<span style="color:#f87171">미회수 ${fmtM(remaining)}원 → 현재 재고로 존재</span>`;
 
-  // 차트 (선택 연도 필터)
+  if(document.getElementById('investStockVal'))
+    document.getElementById('investStockVal').textContent=fmtM(totalStock)+'원';
+
+  // ── 차트 ──
   const chartData=investYear?bepData.filter(d=>d.month.startsWith(investYear)):bepData;
-  const chartLabels=chartData.map(r=>r.month.slice(0,4)+'/'+r.month.slice(4,6));
+  const chartLabels=chartData.map(r=>r.month.slice(0,4)+'/'+r.month.slice(5,7));
   mc('chartInvest',{type:'line',data:{labels:chartLabels,datasets:[
     {label:'누적 영업이익',data:chartData.map(d=>d.cumulative),borderColor:C.green,backgroundColor:'rgba(74,222,128,.07)',tension:.3,pointRadius:2,borderWidth:2,fill:true},
-    {label:'실재고 금액',data:chartData.map(d=>d.stock),borderColor:C.amber,tension:.3,pointRadius:2,borderWidth:1.5,fill:false,borderDash:[5,3]},
-    {label:'월 영업이익',data:chartData.map(d=>d.monthly),borderColor:C.blue,tension:.3,pointRadius:1,borderWidth:1.5,fill:false,borderDash:[2,3]}
+    {label:'월별 투자자 투입',data:chartData.map(d=>d.invest),borderColor:'#f87171',tension:.3,pointRadius:2,borderWidth:1.5,fill:false,borderDash:[4,3]},
+    {label:'월별 영업이익',data:chartData.map(d=>d.profit),borderColor:C.blue,tension:.3,pointRadius:1,borderWidth:1.5,fill:false,borderDash:[2,3]}
   ]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:8},maxTicksLimit:18}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
 
-  // 연도별 투자 현황 테이블 (12월 마감 기준)
+  // ── 연도별 테이블 ──
+  let cumul2=0,cumInvest=0;
+  const yearStats=allYears.map(y=>{
+    const yData=monthData.filter(d=>d.month.startsWith(y));
+    const yRev=yData.reduce((s,d)=>s+d.rev,0);
+    const yExp=yData.reduce((s,d)=>s+d.exp,0);
+    const yProfit=yRev-yExp;
+    const yInvest=yData.reduce((s,d)=>s+d.invest,0);
+    const ySurplus=yData.reduce((s,d)=>s+d.surplus,0);
+    cumul2+=yProfit;
+    cumInvest+=yInvest;
+    // 12월 마감 실재고
+    const decRow=sortedRaw.find(r=>r.month===y+'-12')||sortedRaw.filter(r=>r.month.startsWith(y)).pop();
+    const yStockCumul=sortedRaw.filter(r=>r.month<=decRow?.month).reduce((s,r)=>s+(r.stock||0),0);
+    return{year:y,rev:yRev,exp:yExp,profit:yProfit,invest:yInvest,surplus:ySurplus,cumProfit:cumul2,cumInvest,stock:yStockCumul};
+  });
+
   let ytHTML=`<table><thead><tr>
     <th>연도</th>
-    <th>마감 기준</th>
-    <th>투자 추정액<br><span style="font-size:9px;color:var(--text3);">지출-매출 차액</span></th>
-    <th>총 매출</th>
+    <th>연도 매출</th>
+    <th>연도 지출<br><span style="font-size:9px;color:var(--text3)">운영비+사입</span></th>
     <th>연도 영업이익</th>
     <th>누적 영업이익</th>
-    <th>실재고 금액<br><span style="font-size:9px;color:var(--text3);">12월 마감 기준</span></th>
+    <th>투자자 투입 추정<br><span style="font-size:9px;color:var(--text3)">지출>매출인 달 합산</span></th>
+    <th>누적 투자자 투입</th>
+    <th>실재고 누적<br><span style="font-size:9px;color:var(--text3)">12월 마감 기준</span></th>
   </tr></thead><tbody>`;
+
   yearStats.forEach(y=>{
     ytHTML+=`<tr>
       <td style="font-weight:600">${y.year}년</td>
-      <td style="color:var(--text2)">${y.decMo}월 마감</td>
-      <td style="color:#f87171">${fmtM(y.invest)>0?fmtM(y.invest)+'원':'없음'}</td>
-      <td style="color:var(--text3);font-size:10px;">${fmtM(y.totalRev)}원</td>
+      <td style="color:${C.green}">${fmtM(y.rev)}원</td>
+      <td style="color:#f87171">${fmtM(y.exp)}원</td>
       <td style="color:${y.profit>=0?C.green:'#f87171'}">${fmtM(y.profit)}원</td>
-      <td style="color:${y.cumulative>=0?C.green:'#f87171'}">${fmtM(y.cumulative)}원</td>
+      <td style="color:${y.cumProfit>=0?C.green:'#f87171'}">${fmtM(y.cumProfit)}원</td>
+      <td style="color:#fbbf24">${fmtM(y.invest)}원</td>
+      <td style="color:#fbbf24;font-weight:600">${fmtM(y.cumInvest)}원</td>
       <td style="color:${C.amber}">${fmtM(y.stock)}원</td>
     </tr>`;
   });
-  // 합계
-  const totInvest=yearStats.reduce((s,y)=>s+y.invest,0);
-  const totRev=yearStats.reduce((s,y)=>s+y.totalRev,0);
-  const totProfit=yearStats.reduce((s,y)=>s+y.profit,0);
+
   ytHTML+=`<tr style="font-weight:700;border-top:2px solid var(--border);background:var(--bg3);">
     <td>합계</td>
-    <td style="color:var(--text3)">전체 기간</td>
-    <td style="color:#f87171">${fmtM(totInvest)}원</td>
-    <td style="color:var(--text3)">${fmtM(totRev)}원</td>
-    <td style="color:${totProfit>=0?C.green:'#f87171'}">${fmtM(totProfit)}원</td>
+    <td style="color:${C.green}">${fmtM(totalRev)}원</td>
+    <td style="color:#f87171">${fmtM(totalExp)}원</td>
+    <td style="color:${totalProfit>=0?C.green:'#f87171'}">${fmtM(totalProfit)}원</td>
     <td style="color:${latestCumul>=0?C.green:'#f87171'}">${fmtM(latestCumul)}원 (현재)</td>
-    <td style="color:${C.amber}">${fmtM(latestStock)}원 (현재)</td>
+    <td style="color:#fbbf24">${fmtM(totalInvest)}원</td>
+    <td style="color:#fbbf24;font-weight:700">${fmtM(totalInvest)}원</td>
+    <td style="color:${C.amber}">${fmtM(totalStock)}원 (현재)</td>
   </tr>`;
   ytHTML+='</tbody></table>';
   document.getElementById('investYearTable').innerHTML=ytHTML;
 
-  // 예측 섹션
+  // ── 예측 섹션 ──
+  const recent3=bepData.slice(-3);
+  const avgProfit=recent3.reduce((s,d)=>s+d.profit,0)/(recent3.length||1);
+
   const predRows=[1,2,3].map(yr=>{
     const mos=yr*12;
     const fut=latestCumul+(avgProfit*mos);
@@ -1366,31 +1439,32 @@ function renderInvest(){
       <td style="color:var(--text2)">${mos}개월</td>
       <td style="color:${C.blue}">${fmtM(avgProfit)}원/월</td>
       <td style="color:${fut>=0?C.green:'#f87171'}">${fmtM(fut)}원</td>
-      <td style="color:${fut>=0?C.green:'#f87171'};font-weight:600">${fut>=0?'✅ 이미 달성':'❌ 미달성'}</td>
+      <td style="color:${fut>=0?C.green:'#f87171'};font-weight:600">${fut>=0?'✅ 달성':'❌ 미달성'}</td>
+      <td style="color:${(fut+totalInvest)>=totalInvest?C.green:'#f87171'};font-weight:600">${(fut+totalInvest)>=0?'✅ 전액회수':'❌ 미회수'}</td>
     </tr>`;
   });
+
   document.getElementById('investPredSection').innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;">
         <div style="font-size:10px;color:var(--text3)">최근 3개월 월평균 영업이익</div>
-        <div style="font-size:16px;font-weight:700;color:${C.blue};margin-top:4px">${fmtM(avgProfit)}원</div>
-      </div>
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;">
-        <div style="font-size:10px;color:var(--text3)">현재 실재고 금액</div>
-        <div style="font-size:16px;font-weight:700;color:${C.amber};margin-top:4px">${fmtM(latestStock)}원</div>
+        <div style="font-size:16px;font-weight:700;color:${avgProfit>=0?C.blue:'#f87171'};margin-top:4px">${fmtM(avgProfit)}원</div>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;">
         <div style="font-size:10px;color:var(--text3)">현재 누적 영업이익</div>
         <div style="font-size:16px;font-weight:700;color:${latestCumul>=0?C.green:'#f87171'};margin-top:4px">${fmtM(latestCumul)}원</div>
       </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:var(--text3)">투자자 추정 실투자금</div>
+        <div style="font-size:16px;font-weight:700;color:#fbbf24;margin-top:4px">${fmtM(totalInvest)}원</div>
+      </div>
     </div>
-    <div style="margin-bottom:12px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:12px;font-size:11px;color:#4ade80;line-height:1.6;">
-      ✅ 운영 손익분기점 달성 완료<br>
-      <span style="color:var(--text2);">투자자 실투자금은 영업이익으로 전액 회수됐습니다. 현재 재고 ${fmtM(latestStock)}원은 사업이 자체적으로 만들어낸 공동 자산이며, 투자자 단독 회수 대상이 아닙니다.</span>
-    </div>
-    <table><thead><tr><th>시점</th><th>경과</th><th>월평균 영업이익</th><th>예상 누적 영업이익</th><th>운영 BEP</th></tr></thead>
+    <table><thead><tr>
+      <th>시점</th><th>경과</th><th>월평균 영업이익</th><th>예상 누적 영업이익</th><th>운영 BEP</th><th>투자금 회수</th>
+    </tr></thead>
     <tbody>${predRows.join('')}</tbody></table>`;
 }
+
 
 // ── 사입 분석 ──
 let purchaseFilter={fromY:'',fromM:'',toY:'',toM:'',type:'all'};
