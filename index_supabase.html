@@ -1164,22 +1164,30 @@ function renderDashboard(){
   } else { ysEl.style.display='none'; }
   const lastMonth=data[data.length-1]?.month||'';
   const lastStock=data[data.length-1]?.stock||0;
-  // 선택 기간 재고 합산 (연도 탭 필터 적용)
+  // 선택 기간 재고 합산
   const periodStock=data.reduce((s,r)=>s+(r.stock||0),0);
-  // 전체 누적 실재고 (항상 전체)
+  // 전체 누적 실재고 (전체 탭일때만 표시)
   const totalStock=raw.reduce((s,r)=>s+(r.stock||0),0);
-  // 재고포함 영업이익 = 선택 기간 영업이익 + 선택 기간 재고
+  // 재고포함 영업이익 = 현금기준 + 선택기간 재고
+  // 현금기준: 매출-운영비-사입 / 재고포함: 현금기준+재고
   const profitWithStockDash=totProfit+periodStock;
-  document.getElementById('kpiGrid').innerHTML=[
+
+  // KPI 카드 구성 - 연도탭/전체탭 분리
+  const kpiItems=[
     {label:'총 매출',val:fmtM(totRev),color:C.blue,sub:''},
     {label:'운영 지출-1',val:fmtM(totExp1),color:C.red,sub:''},
     {label:'사입 지출-2',val:fmtM(totExp2),color:C.amber,sub:''},
-    {label:'영업이익 (현금기준)',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red,sub:'사입 전액 비용 처리'},
-    {label:'영업이익 (재고포함)',val:fmtM(profitWithStockDash),color:profitWithStockDash>=0?C.green:C.red,sub:'재고를 자산으로 인정'},
+    {label:'영업이익 (현금기준)',val:fmtM(totProfit),color:totProfit>=0?C.green:C.red,sub:'매출 - 운영비 - 사입 전액'},
+    {label:'영업이익 (재고포함)',val:fmtM(profitWithStockDash),color:profitWithStockDash>=0?C.green:C.red,sub:'현금기준 + 재고자산'},
     {label:'평균 마진율',val:fmtPct(avgMargin),color:avgMargin>=0?C.teal:C.red,sub:''},
-    {label:`실재고 (${lastMonth})`,val:fmtM(lastStock),color:C.purple,sub:'최근 월 기준'},
-    {label:'누적 실재고 (전체)',val:fmtM(totalStock),color:C.purple,sub:'전체 기간 합계'},
-  ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+    {label:`실재고 (${lastMonth})`,val:fmtM(lastStock),color:C.purple,sub:'해당 기간 마지막 월'},
+  ];
+  // 전체 탭일 때만 누적 실재고 추가
+  if(!dashYear){
+    kpiItems.push({label:'누적 실재고 (전체)',val:fmtM(totalStock),color:C.purple,sub:'전체 기간 합계'});
+  }
+  document.getElementById('kpiGrid').innerHTML=kpiItems
+    .map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
   const labels=data.map(r=>r.month.slice(2));
   const profits=data.map(r=>r.operatingProfit||0);
   document.getElementById('profitBadge').textContent='평균 '+fmtM(profits.reduce((a,b)=>a+b,0)/profits.length);
