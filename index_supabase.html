@@ -1240,9 +1240,8 @@ function renderFinance(){
   if(!finYear){
     // 전체 탭: 전체 기간 합산
     const allTotRev=raw.reduce((s,r)=>s+(r.totalRevenue||0),0);
-    const allTotProfitCash=raw.reduce((s,r)=>s+(r.operatingProfit||0),0);
-    const allTotStock=raw.reduce((s,r)=>s+(r.stock||0),0);
-    const allTotProfit=allTotProfitCash+allTotStock; // 재고포함
+    // 전체 영업이익 = yStats 각 연도 재고포함 영업이익 합산 (이중합산 방지)
+    const allTotProfit=yStats.reduce((s,y)=>s+y.totProfit,0);
     const allTotExp1=raw.reduce((s,r)=>s+(r.totalExp1||0),0);
     const allTotExp2=raw.reduce((s,r)=>s+(r.purchase||0),0);
     const allAvgMargin=allTotRev>0?allTotProfit/allTotRev:0;
@@ -1256,10 +1255,8 @@ function renderFinance(){
     marginYoyP=prev?(cur.avgMargin-prev.avgMargin)*100:null;
   }
   // 재고 포함 영업이익 계산 (전체 누적 실재고 합산)
-  // 선택 기간(연도 or 전체) 재고 합산
-  const filteredForStock=finYear?raw.filter(r=>r.month.startsWith(finYear)):raw;
-  const totalStockAll=filteredForStock.reduce((s,r)=>s+(r.stock||0),0);
-  const profitWithStock=cur.totProfit+totalStockAll;
+  // cur.totProfit은 이미 재고포함 영업이익 (yStats에서 계산됨)
+  const profitWithStock=cur.totProfit;
   document.getElementById('finKpiRow').innerHTML=[
     {label:finYear?'연 매출액':'전체 누적 매출',val:fmtM(cur.totRev)+'원',color:C.blue,sub:finYear?cur.year+'년 합계':raw[0]?.month+'~'+raw[raw.length-1]?.month},
     {label:finYear?'연 영업이익':'누적 영업이익',val:fmtM(profitWithStock)+'원',color:profitWithStock>=0?C.green:C.red,sub:'재고 자산 반영한 실질 손익'},
