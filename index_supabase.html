@@ -1226,21 +1226,26 @@ function renderFinance(){
   const yStats=years.map(y=>{
     const yd=raw.filter(r=>r.month.startsWith(y));
     const totRev=yd.reduce((s,r)=>s+(r.totalRevenue||0),0);
-    const totProfit=yd.reduce((s,r)=>s+(r.operatingProfit||0),0);
+    const totProfitCash=yd.reduce((s,r)=>s+(r.operatingProfit||0),0); // 현금기준
+    const totStock=yd.reduce((s,r)=>s+(r.stock||0),0); // 연도 재고 누적
+    const totProfit=totProfitCash+totStock; // 재고포함 영업이익
     const totExp1=yd.reduce((s,r)=>s+(r.totalExp1||0),0);
     const totExp2=yd.reduce((s,r)=>s+(r.purchase||0),0);
-    const avgMargin=yd.reduce((s,r)=>s+(r.marginRate||0),0)/yd.length;
-    return{year:y,totRev,totProfit,totExp1,totExp2,avgMargin,months:yd.length,avgRev:totRev/yd.length};
+    // 마진율 = 재고포함 영업이익 / 매출
+    const avgMargin=totRev>0?totProfit/totRev:0;
+    return{year:y,totRev,totProfit,totProfitCash,totStock,totExp1,totExp2,avgMargin,months:yd.length,avgRev:totRev/yd.length};
   });
   // 전체 탭이면 전체 기간 합산, 특정 연도 탭이면 해당 연도
   let cur, prev=null, revYoy=null, profitYoy=null, marginYoyP=null;
   if(!finYear){
     // 전체 탭: 전체 기간 합산
     const allTotRev=raw.reduce((s,r)=>s+(r.totalRevenue||0),0);
-    const allTotProfit=raw.reduce((s,r)=>s+(r.operatingProfit||0),0);
+    const allTotProfitCash=raw.reduce((s,r)=>s+(r.operatingProfit||0),0);
+    const allTotStock=raw.reduce((s,r)=>s+(r.stock||0),0);
+    const allTotProfit=allTotProfitCash+allTotStock; // 재고포함
     const allTotExp1=raw.reduce((s,r)=>s+(r.totalExp1||0),0);
     const allTotExp2=raw.reduce((s,r)=>s+(r.purchase||0),0);
-    const allAvgMargin=raw.reduce((s,r)=>s+(r.marginRate||0),0)/raw.length;
+    const allAvgMargin=allTotRev>0?allTotProfit/allTotRev:0;
     cur={year:'전체',totRev:allTotRev,totProfit:allTotProfit,totExp1:allTotExp1,totExp2:allTotExp2,avgMargin:allAvgMargin,months:raw.length,avgRev:allTotRev/raw.length};
   } else {
     cur=yStats.find(s=>s.year===finYear)||yStats[yStats.length-1];
@@ -1275,9 +1280,9 @@ function renderFinance(){
   document.getElementById('fin-margin-yoy').innerHTML=marginYoyP!=null?`${marginYoyP>=0?'▲':'▼'} ${marginYoyP>=0?'+':''}${marginYoyP.toFixed(1)}%p`:'';
   document.getElementById('fin-margin-sub').textContent='월 평균 기준';
   const yLabels=yStats.map(s=>s.year+'년'+(finYear&&s.year===finYear?' ★':''));
-  mc('chartFinRev',{type:'bar',data:{labels:yLabels,datasets:[{data:yStats.map(s=>s.totRev),backgroundColor:yStats.map(s=>s.year===cur.year?C.blue:'rgba(108,143,255,.3)'),borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
-  mc('chartFinProfit',{type:'bar',data:{labels:yLabels,datasets:[{data:yStats.map(s=>s.totProfit),backgroundColor:yStats.map(s=>s.year===cur.year?(s.totProfit>=0?C.green:C.red):(s.totProfit>=0?'rgba(74,222,128,.25)':'rgba(248,113,113,.25)')),borderColor:yStats.map(s=>s.totProfit>=0?C.green:C.red),borderWidth:1,borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
-  mc('chartFinMargin',{type:'bar',data:{labels:yLabels,datasets:[{data:yStats.map(s=>s.avgMargin*100),backgroundColor:yStats.map(s=>s.year===cur.year?(s.avgMargin>=0?C.teal:C.red):(s.avgMargin>=0?'rgba(78,205,196,.25)':'rgba(248,113,113,.25)')),borderColor:yStats.map(s=>s.avgMargin>=0?C.teal:C.red),borderWidth:1,borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(2)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(1)+'%'}}}}});
+  mc('chartFinRev',{type:'bar',data:{labels:yLabels,datasets:[{label:'매출액',data:yStats.map(s=>s.totRev),backgroundColor:yStats.map(s=>s.year===cur.year?C.blue:'rgba(108,143,255,.3)'),borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+  mc('chartFinProfit',{type:'bar',data:{labels:yLabels,datasets:[{label:'영업이익',data:yStats.map(s=>s.totProfit),backgroundColor:yStats.map(s=>s.year===cur.year?(s.totProfit>=0?C.green:C.red):(s.totProfit>=0?'rgba(74,222,128,.25)':'rgba(248,113,113,.25)')),borderColor:yStats.map(s=>s.totProfit>=0?C.green:C.red),borderWidth:1,borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
+  mc('chartFinMargin',{type:'bar',data:{labels:yLabels,datasets:[{label:'마진율',data:yStats.map(s=>s.avgMargin*100),backgroundColor:yStats.map(s=>s.year===cur.year?(s.avgMargin>=0?C.teal:C.red):(s.avgMargin>=0?'rgba(78,205,196,.25)':'rgba(248,113,113,.25)')),borderColor:yStats.map(s=>s.avgMargin>=0?C.teal:C.red),borderWidth:1,borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(2)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(1)+'%'}}}}});
   const stageColors={neg:'rgba(248,113,113,.7)',improve:'rgba(251,191,36,.7)',black:'rgba(74,222,128,.7)'};
   const stageLabel={neg:'적자',improve:'개선',black:'흑자'};
   const getStage=m=>m>0.05?'black':m>0?'improve':'neg';
