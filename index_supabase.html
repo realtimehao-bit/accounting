@@ -1185,8 +1185,10 @@ function renderDashboard(){
   })();
   // 선택 기간 재고 합산
   const periodStock=data.reduce((s,r)=>s+(r.stock||0),0);
-  // 전체 누적 실재고 (전체 탭일때만 표시)
-  const totalStock=raw.reduce((s,r)=>s+(r.stock||0),0);
+  // 누적 실재고 = 지출-매출 차액 기준 (3.8억으로 통일)
+  const totalRevAll=raw.reduce((s,r)=>s+(r.totalRevenue||0),0);
+  const totalExpAll=raw.reduce((s,r)=>s+(r.totalExp1||0)+(r.purchase||0),0);
+  const totalStock=Math.abs(totalRevAll-totalExpAll);
   // 재고포함 영업이익 = 현금기준 + 선택기간 재고
   // 현금기준: 매출-운영비-사입 / 재고포함: 현금기준+재고
   const profitWithStockDash=totProfit+periodStock;
@@ -1205,7 +1207,7 @@ function renderDashboard(){
   }
   // 전체 탭일 때만 누적 실재고 추가
   if(!dashYear){
-    kpiItems.push({label:'누적 실재고 (전체)',val:fmtM(totalStock),color:C.purple,sub:'전체 기간 합계'});
+    kpiItems.push({label:'재고 자산 (전체)',val:fmtM(totalStock),color:C.purple,sub:'지출-매출 차액 기준'});
   }
   document.getElementById('kpiGrid').innerHTML=kpiItems
     .map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
