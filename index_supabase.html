@@ -1898,7 +1898,10 @@ async function importMainData(wb){
   }
 }
 async function importPurchaseData(wb){
-  const ws=wb.Sheets[wb.SheetNames[0]];
+  // Sheet4 우선 읽기, 없으면 첫 번째 시트
+  const sheetName=wb.SheetNames.includes('Sheet4')?'Sheet4':
+                  wb.SheetNames.find(n=>n.trim()==='Sheet4')||wb.SheetNames[0];
+  const ws=wb.Sheets[sheetName];
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
   const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
   function parseDateCell(s){if(!s||typeof s!=='string')return null;s=s.trim();if(!s||s==='월'||s.includes('신제품')||s.includes('리오더'))return null;let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m){const y=parseInt(m[3]);if(y>=2020&&y<=2099)return m[3]+'-'+m[1].padStart(2,'0');}m=s.match(/^(\d{4})[\-\/](\d{1,2})/);if(m){const y=parseInt(m[1]);if(y>=2020&&y<=2099)return m[1]+'-'+m[2].padStart(2,'0');}return null;}
