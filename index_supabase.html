@@ -1942,10 +1942,11 @@ async function importPurchaseData(wb){
     const month=parseDate(String(row[dateCol]||''),raw?raw[dateCol]:null);
     if(!month){skipped.push(i);continue;}
     const getRaw=col=>{const rv=raw?raw[col]:null;if(typeof rv==='number')return rv;return parseNum(row[col]);};
-    const newPurchaseAmt=getRaw(dataStart);
-    const newPurchaseSku=getRaw(dataStart+1);
-    const reorderAmt=getRaw(dataStart+2);
-    const reorderSku=getRaw(dataStart+3);
+    // A=날짜, B=사입총지출(skip), C=신제품사입, D=신제품SKU, E=리오더사입, F=리오더SKU
+    const newPurchaseAmt=getRaw(2);
+    const newPurchaseSku=getRaw(3);
+    const reorderAmt=getRaw(4);
+    const reorderSku=getRaw(5);
     if(!newPurchaseAmt&&!newPurchaseSku&&!reorderAmt&&!reorderSku){skipped.push(i);continue;}
     imported.push({month,newPurchaseAmt,newPurchaseSku,reorderAmt,reorderSku});
   }
