@@ -1898,67 +1898,45 @@ async function importMainData(wb){
   }
 }
 async function importPurchaseData(wb){
-  // Sheet1 읽기 (신제품/리오더 금액+SKU 모두 포함)
   const sn=wb.SheetNames[0];
   const ws=wb.Sheets[sn];
-  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
-  const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
-
-  // 헤더 행 찾기
-  let hi=-1;
-  for(let i=0;i<Math.min(rows.length,5);i++){
-    if(rows[i].some(c=>String(c).includes('신제품')||String(c).includes('리오더'))){hi=i;break;}
-  }
-  if(hi<0)hi=0;
-
-  // 날짜 파싱
-  function parseDate(s,rv){
-    if(typeof rv==='number'&&rv>40000&&rv<60000) return excelDateToYYYYMM(rv);
-    if(rv instanceof Date) return rv.getFullYear()+'-'+String(rv.getMonth()+1).padStart(2,'0');
-    if(!s||typeof s!=='string') return null;
-    s=s.trim();
-    let m=s.match(/^(\d{4})[-\/](\d{1,2})/);
-    if(m&&parseInt(m[1])>=2020) return m[1]+'-'+m[2].padStart(2,'0');
-    m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if(m&&parseInt(m[3])>=2020) return m[3]+'-'+m[1].padStart(2,'0');
-    return null;
-  }
-
-  // 날짜 컬럼 찾기
-  let dateCol=0,dataStart=1;
-  for(let i=hi+1;i<Math.min(rows.length,hi+5);i++){
-    for(let j=0;j<5;j++){
-      if(parseDate(String(rows[i][j]||''),rawRows[i]?rawRows[i][j]:null)){
-        dateCol=j;dataStart=j+1;break;
-      }
-    }
-    if(dataStart>1)break;
-  }
-
+  const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
   const imported=[],skipped=[];
-  for(let i=hi+1;i<rows.length;i++){
-    const row=rows[i],raw=rawRows[i];
-    if(!row||row.length===0)continue;
-    const month=parseDate(String(row[dateCol]||''),raw?raw[dateCol]:null);
+
+  for(let i=1;i<rawRows.length;i++){
+    const r=rawRows[i];
+    if(!r||r.length<3)continue;
+
+    // A열 날짜 파싱
+    let month=null;
+    const dv=r[0];
+    if(typeof dv==='number'&&dv>40000&&dv<60000){
+      month=excelDateToYYYYMM(dv);
+    } else if(typeof dv==='string'&&dv.length>=7){
+      const s=dv.trim().slice(0,7);
+      if(/^\d{4}-\d{2}$/.test(s)) month=s;
+    }
     if(!month){skipped.push(i);continue;}
-    const getRaw=col=>{const rv=raw?raw[col]:null;if(typeof rv==='number')return rv;return parseNum(row[col]);};
-    // A=날짜, B=사입총지출(skip), C=신제품사입, D=신제품SKU, E=리오더사입, F=리오더SKU
-    const newPurchaseAmt=getRaw(2);
-    const newPurchaseSku=getRaw(3);
-    const reorderAmt=getRaw(4);
-    const reorderSku=getRaw(5);
+
+    // C=신제품사입(2), D=신제품SKU(3), E=리오더사입(4), F=리오더SKU(5)
+    const n=v=>typeof v==='number'?v:0;
+    const newPurchaseAmt=n(r[2]);
+    const newPurchaseSku=n(r[3]);
+    const reorderAmt=n(r[4]);
+    const reorderSku=n(r[5]);
+
     if(!newPurchaseAmt&&!newPurchaseSku&&!reorderAmt&&!reorderSku){skipped.push(i);continue;}
     imported.push({month,newPurchaseAmt,newPurchaseSku,reorderAmt,reorderSku});
   }
 
   if(!imported.length){
-    document.getElementById('importPurchaseResult').innerHTML='<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">데이터를 찾을 수 없습니다.</div>';
+    document.getElementById('importPurchaseResult').innerHTML='<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">데이터를 찾을 수 없습니다. Sheet1을 확인해주세요.</div>';
     return;
   }
   try{
     await bulkSavePurchase(imported);
     document.getElementById('importPurchaseResult').innerHTML=`<div class="import-note">✅ 가져오기 완료! <strong>${imported.length}개월</strong> · 건너뜀: ${skipped.length}행<br>☁️ Supabase에 저장되었습니다.</div>`;
-    showAlert(`사입 데이터 ${imported.length}개월 완료!`);
+    showAlert('사입 데이터 '+imported.length+'개월 완료!');
   }catch(e){
     document.getElementById('importPurchaseResult').innerHTML=`<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">저장 오류: ${e.message}</div>`;
   }
