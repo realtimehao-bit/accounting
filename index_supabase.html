@@ -1143,7 +1143,7 @@ function renderDashboard(){
   const totExp2=data.reduce((s,r)=>s+(r.purchase||0),0);
   // 영업이익 재고 미포함 = 매출 - 운영비 - 사입비 (현금기준)
   const totProfit=data.reduce((s,r)=>s+(r.totalRevenue||0)-(r.totalExp1||0)-(r.purchase||0),0);
-  const avgMargin=data.reduce((s,r)=>s+(r.marginRate||0),0)/data.length;
+  const avgMargin=data.reduce((s,r)=>{const rev=r.totalRevenue||0;return s+(rev>0?((rev-(r.totalExp1||0)-(r.purchase||0))/rev):0);},0)/data.length;
   document.getElementById('dashPeriod').textContent=data[0].month+' ~ '+data[data.length-1].month+' ('+data.length+'개월)';
   const allYears=[...new Set(raw.map(r=>r.month.slice(0,4)))].sort();
   const ysEl=document.getElementById('yearSummary');
@@ -1212,13 +1212,13 @@ function renderDashboard(){
   document.getElementById('kpiGrid').innerHTML=kpiItems
     .map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
   const labels=data.map(r=>r.month.slice(2));
-  const profits=data.map(r=>r.operatingProfit||0);
+  const profits=data.map(r=>(r.totalRevenue||0)-(r.totalExp1||0)-(r.purchase||0));
   document.getElementById('profitBadge').textContent='평균 '+fmtM(profits.reduce((a,b)=>a+b,0)/profits.length);
   mc('chartProfit',{type:'bar',data:{labels,datasets:[{data:profits,backgroundColor:profits.map(v=>v>=0?'rgba(74,222,128,.5)':'rgba(248,113,113,.5)'),borderColor:profits.map(v=>v>=0?C.green:C.red),borderWidth:1,borderRadius:3}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
   const ocT=data.reduce((s,r)=>s+(r.ownerclan||0),0),dkT=data.reduce((s,r)=>s+(r.domekku||0),0),cpT=data.reduce((s,r)=>s+((r.coupangIt||0)+(r.coupangGlobal||0)+(r.coupangEtc||0)),0),etT=data.reduce((s,r)=>s+(r.otherRevenue||0),0);
   mc('chartPlatform',{type:'doughnut',data:{labels:['오너클랜','도매꾹','쿠팡','기타'],datasets:[{data:[ocT,dkT,cpT,etT],backgroundColor:['#6c8fff','#4ecdc4','#fbbf24','#6b7280'],borderWidth:0}]},options:{cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{color:'#8b8fa8',font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:ctx=>' '+(totRev>0?(ctx.raw/totRev*100).toFixed(1):0)+'% · '+fmtM(ctx.raw)}}}}});
   mc('chartRevExp',{type:'line',data:{labels,datasets:[{label:'매출',data:data.map(r=>r.totalRevenue||0),borderColor:C.blue,backgroundColor:'rgba(108,143,255,.1)',fill:true,tension:.3,pointRadius:2,borderWidth:2},{label:'지출-1',data:data.map(r=>r.totalExp1||0),borderColor:C.red,backgroundColor:'rgba(248,113,113,.08)',fill:true,tension:.3,pointRadius:2,borderWidth:2}]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
-  mc('chartMargin',{type:'line',data:{labels,datasets:[{label:'마진율',data:data.map(r=>(r.marginRate||0)*100),borderColor:C.teal,tension:.3,pointRadius:2,borderWidth:2,fill:false},{label:'배송포함',data:data.map(r=>(r.deliveryIncludeMarginRate||0)*100),borderColor:C.purple,tension:.3,pointRadius:2,borderWidth:2,fill:false,borderDash:[4,2]}]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(1)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(0)+'%'}}}}});
+  mc('chartMargin',{type:'line',data:{labels,datasets:[{label:'마진율',data:data.map(r=>{const rev=r.totalRevenue||0;return rev>0?((rev-(r.totalExp1||0)-(r.purchase||0))/rev*100):0;}),borderColor:C.teal,tension:.3,pointRadius:2,borderWidth:2,fill:false},{label:'배송포함',data:data.map(r=>(r.deliveryIncludeMarginRate||0)*100),borderColor:C.purple,tension:.3,pointRadius:2,borderWidth:2,fill:false,borderDash:[4,2]}]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(1)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(0)+'%'}}}}});
 }
 
 // ── 재무분석 ──
@@ -1787,7 +1787,7 @@ function renderLedger(){
   const data=fy?raw.filter(r=>r.month.startsWith(fy)):raw;
   document.getElementById('ledgerCount').textContent=data.length+'건';
   document.getElementById('ledgerBody').innerHTML=[...data].reverse().map(r=>{
-    const pf=r.operatingProfit||0,mg=r.marginRate,sr=r.stockRate;
+    const rev=r.totalRevenue||0,pf=rev-(r.totalExp1||0)-(r.purchase||0),mg=rev>0?pf/rev:0,sr=r.stockRate;
     return`<tr><td>${r.month}</td><td>${fmt(r.totalRevenue)}</td><td>${fmt(r.ownerclan)}</td><td>${fmt(r.domekku)}</td><td>${fmt((r.coupangIt||0)+(r.coupangGlobal||0)+(r.coupangEtc||0))}</td><td>${fmt(r.totalExp1)}</td><td>${fmt(r.purchase)}</td><td class="${pf>=0?'pos':'neg'}">${fmt(pf)}</td><td class="${mg>=0?'pos':'neg'}">${fmtPct(mg)}</td><td>${fmt(r.stock)}</td><td class="${sr>0.5?'neg':sr>0.2?'amb':'pos'}">${fmtPct(sr)}</td><td>${fmtPct(r.productMarginRate)}</td><td>${fmtPct(r.deliveryMarginRate)}</td><td><button class="del-btn" onclick="deleteEntry('${r.month}')">×</button></td></tr>`;
   }).join('')||'<tr><td colspan="14" class="empty">데이터 없음</td></tr>';
 }
@@ -1952,7 +1952,7 @@ async function importPurchaseData(wb){
 function exportCSV(){
   const data=getData();if(!data.length){showAlert('데이터 없음','var(--red)');return;}
   const h=['연월','매출합계','오너클랜','도매꾹','쿠팡','지출-1','지출-2','영업이익','마진율','실재고','재고율','상품마진율','배송포함마진율'];
-  const csv='\uFEFF'+[h,...data.map(r=>[r.month,r.totalRevenue,r.ownerclan,r.domekku,(r.coupangIt||0)+(r.coupangGlobal||0)+(r.coupangEtc||0),r.totalExp1,r.purchase,r.operatingProfit,fmtPct(r.marginRate),r.stock,fmtPct(r.stockRate),fmtPct(r.productMarginRate),fmtPct(r.deliveryIncludeMarginRate)])].map(r=>r.join(',')).join('\n');
+  const csv='\uFEFF'+[h,...data.map(r=>{const rev=r.totalRevenue||0,pf=rev-(r.totalExp1||0)-(r.purchase||0),mg=rev>0?pf/rev:0;return[r.month,r.totalRevenue,r.ownerclan,r.domekku,(r.coupangIt||0)+(r.coupangGlobal||0)+(r.coupangEtc||0),r.totalExp1,r.purchase,pf,fmtPct(mg),r.stock,fmtPct(r.stockRate),fmtPct(r.productMarginRate),fmtPct(r.deliveryIncludeMarginRate)];})].map(r=>r.join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='b2b_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   showAlert('CSV 내보내기 완료!');
 }
