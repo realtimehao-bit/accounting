@@ -1186,10 +1186,8 @@ function renderDashboard(){
   })();
   // 선택 기간 재고 합산
   const periodStock=data.reduce((s,r)=>s+(r.stock||0),0);
-  // 누적 실재고 = 지출-매출 차액 기준 (3.8억으로 통일)
-  const totalRevAll=raw.reduce((s,r)=>s+(r.totalRevenue||0),0);
-  const totalExpAll=raw.reduce((s,r)=>s+(r.totalExp1||0)+(r.purchase||0),0);
-  const totalStock=Math.abs(totalRevAll-totalExpAll);
+  // 누적 실재고 = 매달 입력된 stock 필드 합계 기준 (재무분석·마진분석과 동일 공식으로 통일)
+  const totalStock=raw.reduce((s,r)=>s+(r.stock||0),0);
   // 재고포함 영업이익 = 현금기준 + 선택기간 재고
   // 현금기준: 매출-운영비-사입 / 재고포함: 현금기준+재고
   const profitWithStockDash=totProfit+periodStock;
@@ -1209,7 +1207,7 @@ function renderDashboard(){
   }
   // 전체 탭일 때만 누적 실재고 추가
   if(!dashYear){
-    kpiItems.push({label:'재고 자산 (전체)',val:fmtM(totalStock),color:C.purple,sub:'지출-매출 차액 기준'});
+    kpiItems.push({label:'재고 자산 (전체)',val:fmtM(totalStock),color:C.purple,sub:'월별 실재고 누적 합계'});
   }
   document.getElementById('kpiGrid').innerHTML=kpiItems
     .map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
@@ -1233,7 +1231,7 @@ function renderFinance(){
   const yStats=years.map(y=>{
     const yd=raw.filter(r=>r.month.startsWith(y));
     const totRev=yd.reduce((s,r)=>s+(r.totalRevenue||0),0);
-    const totProfitCash=yd.reduce((s,r)=>s+(r.operatingProfit||0),0); // 현금기준
+    const totProfitCash=yd.reduce((s,r)=>s+(r.totalRevenue||0)-(r.totalExp1||0)-(r.purchase||0),0); // 현금기준 (대시보드/추이분석과 동일 공식으로 재계산)
     const totStock=yd.reduce((s,r)=>s+(r.stock||0),0); // 연도 재고 누적
     const totProfit=totProfitCash+totStock; // 재고포함 영업이익
     const totExp1=yd.reduce((s,r)=>s+(r.totalExp1||0),0);
@@ -1712,15 +1710,13 @@ function renderMargin(){
   const data=getData();if(!data.length)return;
   const vm=data.filter(r=>r.productMarginRate!=null);
   const avg=(arr,k)=>arr.length?arr.reduce((s,r)=>s+(r[k]||0),0)/arr.length:0;
-  // 누적 실재고 = 지출-매출 차액 기준 (3.8억)
-  const mTotalRev=data.reduce((s,r)=>s+(r.totalRevenue||0),0);
-  const mTotalExp=data.reduce((s,r)=>s+(r.totalExp1||0)+(r.purchase||0),0);
-  const mNetStock=Math.abs(mTotalRev-mTotalExp); // 지출-매출 차액
+  // 누적 실재고 = 매달 입력된 stock 필드 합계 기준 (대시보드·재무분석과 동일 공식으로 통일)
+  const mNetStock=data.reduce((s,r)=>s+(r.stock||0),0);
   document.getElementById('marginKpi').innerHTML=[
     {label:'평균 상품마진율',val:fmtPct(avg(vm,'productMarginRate')),color:C.teal},
     {label:'평균 배송마진율',val:fmtPct(avg(vm,'deliveryMarginRate')),color:C.blue},
     {label:'배송포함 마진율',val:fmtPct(avg(vm,'deliveryIncludeMarginRate')),color:C.green},
-    {label:'재고 자산 (누적)',val:fmtM(mNetStock),color:C.amber,sub:'지출-매출 차액 기준'},
+    {label:'재고 자산 (누적)',val:fmtM(mNetStock),color:C.amber,sub:'월별 실재고 누적 합계'},
   ].map(k=>`<div class="kpi" style="--kpi-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div>${k.sub?`<div class="kpi-sub">${k.sub}</div>`:''}</div>`).join('');
   const labels=data.map(r=>r.month.slice(2));
   mc('chartMarginComp',{type:'line',data:{labels,datasets:[{label:'상품마진율',data:data.map(r=>(r.productMarginRate||0)*100),borderColor:C.teal,tension:.3,pointRadius:2,borderWidth:2,fill:false},{label:'배송포함',data:data.map(r=>(r.deliveryIncludeMarginRate||0)*100),borderColor:C.green,tension:.3,pointRadius:2,borderWidth:2,fill:false}]},options:{plugins:{legend:{display:true,labels:{color:'#8b8fa8',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(2)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(0)+'%'}}}}});
