@@ -1108,7 +1108,9 @@ function mc(id,cfg){
   dc(id);const ctx=document.getElementById(id);if(!ctx)return;
   const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2030',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#8b8fa8',bodyColor:'#e8eaf0'}}};
   const scaleOpts=cfg.type==='doughnut'?{}:{scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}}}};
-  charts[id]=new Chart(ctx,{...cfg,options:{...baseOpts,...scaleOpts,...(cfg.options||{})}});
+  const cfgPlugins=(cfg.options&&cfg.options.plugins)||{};
+  const mergedPlugins={...baseOpts.plugins,...cfgPlugins,legend:{...baseOpts.plugins.legend,...(cfgPlugins.legend||{})},tooltip:{...baseOpts.plugins.tooltip,...(cfgPlugins.tooltip||{})}};
+  charts[id]=new Chart(ctx,{...cfg,options:{...baseOpts,...scaleOpts,...(cfg.options||{}),plugins:mergedPlugins}});
 }
 
 // ── NAV ──
@@ -1823,14 +1825,13 @@ async function saveEntry(){
   const totalExp1=adCost+commission+deliveryCost+laborCost+rent+material+opEtc+finance+vat;
   const purchase=g('f-purchase'),stock=g('f-stock'),ocSellPrice=g('f-oc-sell'),dkSellPrice=g('f-dk-sell');
   const ocMargin=g('f-oc-margin'),dkMargin=g('f-dk-margin'),ocDelFee=g('f-oc-delfee'),dkDelMarg=g('f-dk-delmarg'),cpDelMarg=g('f-cp-delmarg');
-  const operatingProfit=totalRevenue-totalExp1,marginRate=totalRevenue>0?operatingProfit/totalRevenue:0;
   const stockRate=purchase>0?stock/purchase:0;
   const totalSell=ocSellPrice+dkSellPrice;
   const productMarginRate=totalSell>0?(ocMargin+dkMargin)/totalSell:null;
   const totalDelMarg=ocDelFee+dkDelMarg+cpDelMarg-deliveryCost;
   const deliveryMarginRate=(ocDelFee+dkDelMarg+cpDelMarg)>0?totalDelMarg/(ocDelFee+dkDelMarg+cpDelMarg):null;
   const deliveryIncludeMarginRate=totalSell>0?(ocMargin+dkMargin+totalDelMarg)/totalSell:null;
-  const entry={month,ownerclan,domekku,coupangIt,coupangGlobal,coupangEtc,otherRevenue,totalRevenue,adCost,commission,deliveryCost,laborCost,rent,material,opEtc,finance,vat,totalExp1,purchase,stock,ocSellPrice,dkSellPrice,ocMargin,dkMargin,ocDelFee,dkDelMarg,cpDelMarg,operatingProfit,marginRate,stockRate,productMarginRate,deliveryMarginRate,deliveryIncludeMarginRate};
+  const entry={month,ownerclan,domekku,coupangIt,coupangGlobal,coupangEtc,otherRevenue,totalRevenue,adCost,commission,deliveryCost,laborCost,rent,material,opEtc,finance,vat,totalExp1,purchase,stock,ocSellPrice,dkSellPrice,ocMargin,dkMargin,ocDelFee,dkDelMarg,cpDelMarg,stockRate,productMarginRate,deliveryMarginRate,deliveryIncludeMarginRate};
   try {
     await saveAccountingEntry(entry);
     const newPurchaseAmt=g('f-new-amt'),newPurchaseSku=g('f-new-sku'),reorderAmt=g('f-re-amt'),reorderSku=g('f-re-sku');
@@ -1887,8 +1888,7 @@ async function importMainData(wb){
     const ocSellPrice=n(24),dkSellPrice=n(25),ocMargin=n(29),dkMargin=n(30);
     const productMarginRate=n(31)||null,deliveryIncludeMarginRate=n(32)||null;
     const ocDelFee=n(33),dkDelMarg=n(34),cpDelMarg=n(35),deliveryMarginRate=n(39)||null;
-    const operatingProfit=n(19)||totalRevenue-totalExp1,marginRate=n(20)||(totalRevenue>0?operatingProfit/totalRevenue:0);
-    imported.push({month,ownerclan,domekku,coupangIt,coupangGlobal,coupangEtc,otherRevenue,totalRevenue,adCost,commission,deliveryCost,laborCost,rent,material,opEtc,finance,vat,totalExp1,purchase,stock,ocSellPrice,dkSellPrice,stockRate,ocMargin,dkMargin,ocDelFee,dkDelMarg,cpDelMarg,operatingProfit,marginRate,productMarginRate,deliveryIncludeMarginRate,deliveryMarginRate});
+    imported.push({month,ownerclan,domekku,coupangIt,coupangGlobal,coupangEtc,otherRevenue,totalRevenue,adCost,commission,deliveryCost,laborCost,rent,material,opEtc,finance,vat,totalExp1,purchase,stock,ocSellPrice,dkSellPrice,stockRate,ocMargin,dkMargin,ocDelFee,dkDelMarg,cpDelMarg,productMarginRate,deliveryIncludeMarginRate,deliveryMarginRate});
   }
   if(!imported.length){document.getElementById('importResult').innerHTML=`<div class="import-note" style="border-color:rgba(248,113,113,.3);color:var(--red);">데이터를 찾을 수 없습니다</div>`;return;}
   try {
