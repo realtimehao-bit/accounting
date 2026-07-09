@@ -1642,7 +1642,13 @@ function searchPurchase(){
     if(from&&r.month<from)return false;
     if(to&&r.month>to)return false;
     return true;
-  });
+  }).map(r=>({
+    ...r,
+    newPurchaseAmt:type==='reorder'?0:(r.newPurchaseAmt||0),
+    newPurchaseSku:type==='reorder'?0:(r.newPurchaseSku||0),
+    reorderAmt:type==='new'?0:(r.reorderAmt||0),
+    reorderSku:type==='new'?0:(r.reorderSku||0),
+  }));
   document.getElementById('ratioRangeBadge').textContent=data.length?data[0].month+' ~ '+data[data.length-1].month:'';
   const totNewAmt=data.reduce((s,r)=>s+(r.newPurchaseAmt||0),0);
   const totNewSku=data.reduce((s,r)=>s+(r.newPurchaseSku||0),0);
