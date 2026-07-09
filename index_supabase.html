@@ -1413,7 +1413,7 @@ function renderInvest(){
         `<span style="color:#f87171">미회수 ${fmtM(remaining)}원 → 현재 재고로 존재</span>`;
 
   if(document.getElementById('investStockVal'))
-    document.getElementById('investStockVal').textContent=fmtM(Math.abs(totalProfit))+'원';
+    document.getElementById('investStockVal').textContent=fmtM(totalStock)+'원';
 
   // ── 차트 ──
   const chartData=investYear?bepData.filter(d=>d.month.startsWith(investYear)):bepData;
