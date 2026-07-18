@@ -1404,13 +1404,17 @@ function renderInvest(){
   }
 
   const kpi3el=document.getElementById('investKpi3');
-  kpi3el.textContent=fmtM(recovered)+'원';
-  kpi3el.style.color=recovered>=totalInvest?'#4ade80':'#fbbf24';
+  const CORP_LOAN=160000000; // 법인 대출로 이미 회수된 금액 (1.6억)
+  const recoveredWithLoan=recovered+CORP_LOAN; // 매출 회수 + 법인대출 회수
+  const netRemaining=Math.max(0,remaining-CORP_LOAN); // 투자자 미회수 잔액 (재고자산 3.8억과는 별개 개념)
+  kpi3el.textContent=fmtM(recoveredWithLoan)+'원';
+  kpi3el.style.color=recoveredWithLoan>=totalInvest?'#4ade80':'#fbbf24';
   document.getElementById('investKpi3sub').innerHTML=
-    recovered>=totalInvest
+    recoveredWithLoan>=totalInvest
       ? `✅ 전액 회수 완료`
-      : `투자금 ${fmtM(totalInvest)}원 중 ${fmtM(recovered)}원 회수<br>`+
-        `<span style="color:#f87171">미회수 ${fmtM(remaining)}원 → 현재 재고로 존재</span>`;
+      : `투자금 ${fmtM(totalInvest)}원 중 매출로 ${fmtM(recovered)}원 회수<br>`+
+        `법인대출로 1억 6,000만원 회수<br>`+
+        `<span style="color:#f87171">투자자 미회수 금액 약 ${fmtM(netRemaining)}원</span>`;
 
   if(document.getElementById('investStockVal'))
     document.getElementById('investStockVal').textContent=fmtM(totalStock)+'원';
