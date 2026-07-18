@@ -1660,10 +1660,12 @@ function searchPurchase(){
   const newAmtPct=totAmt>0?totNewAmt/totAmt*100:0,reAmtPct=totAmt>0?totReAmt/totAmt*100:0;
   const newSkuPct=totSku>0?totNewSku/totSku*100:0,reSkuPct=totSku>0?totReSku/totSku*100:0;
   const avgNewUnit=totNewSku>0?Math.round(totNewAmt/totNewSku):0,avgReUnit=totReSku>0?Math.round(totReAmt/totReSku):0;
+  const monthCount=data.length||1;
+  const monthAvgAmt=totAmt/monthCount, monthAvgSku=totSku/monthCount;
   document.getElementById('purchaseKpi').innerHTML=[
     {label:'신제품 사입합계',val:fmtM(totNewAmt)+'원',sub:`${totNewSku}건 SKU`,color:C.blue,'--skpi-color':C.blue},
     {label:'리오더 사입합계',val:fmtM(totReAmt)+'원',sub:`${totReSku}건 SKU`,color:C.teal,'--skpi-color':C.teal},
-    {label:'전체 사입합계',val:fmtM(totAmt)+'원',sub:`${totSku}건 SKU`,color:C.amber,'--skpi-color':C.amber},
+    {label:'월평균 사입금액',val:fmtM(monthAvgAmt)+'원',sub:`월평균 ${Math.round(monthAvgSku)}건 SKU · ${monthCount}개월 기준`,color:C.amber,'--skpi-color':C.amber},
     {label:'신제품 비율',val:newAmtPct.toFixed(1)+'%',sub:`SKU ${newSkuPct.toFixed(1)}%`,color:C.purple,'--skpi-color':C.purple},
   ].map(k=>`<div class="skpi" style="--skpi-color:${k.color}"><div class="skpi-label">${k.label}</div><div class="skpi-val">${k.val}</div><div class="skpi-sub">${k.sub}</div></div>`).join('');
   document.getElementById('ratioBar').innerHTML=`<div class="ratio-new" style="width:${newAmtPct}%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">${newAmtPct.toFixed(0)}%</div><div class="ratio-re" style="width:${reAmtPct}%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">${reAmtPct.toFixed(0)}%</div>`;
