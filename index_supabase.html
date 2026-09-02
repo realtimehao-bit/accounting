@@ -2895,8 +2895,56 @@ function renderFinance(){
   document.getElementById('fin-margin-sub').textContent='월 평균 기준';
   const yLabels=yStats.map(s=>s.year+'년'+(finYear&&s.year===finYear?' ★':''));
   mc('chartFinRev',{type:'bar',data:{labels:yLabels,datasets:[{label:'매출액',data:yStats.map(s=>s.totRev),backgroundColor:yStats.map(s=>s.year===cur.year?C.blue:'rgba(108,143,255,.3)'),borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
-  mc('chartFinProfit',{type:'bar',data:{labels:yLabels,datasets:[{label:'영업이익',data:yStats.map(s=>s.totProfit),backgroundColor:yStats.map(s=>s.year===cur.year?(s.totProfit>=0?C.green:C.red):(s.totProfit>=0?'rgba(74,222,128,.25)':'rgba(248,113,113,.25)')),borderColor:yStats.map(s=>s.totProfit>=0?C.green:C.red),borderWidth:1,borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+fmtM(ctx.raw)+'원'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>fmtM(v)}}}}});
-  mc('chartFinMargin',{type:'bar',data:{labels:yLabels,datasets:[{label:'마진율',data:yStats.map(s=>s.avgMargin*100),backgroundColor:yStats.map(s=>s.year===cur.year?(s.avgMargin>=0?C.teal:C.red):(s.avgMargin>=0?'rgba(78,205,196,.25)':'rgba(248,113,113,.25)')),borderColor:yStats.map(s=>s.avgMargin>=0?C.teal:C.red),borderWidth:1,borderRadius:4}]},options:{plugins:{tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(2)+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9},callback:v=>v.toFixed(1)+'%'}}}}});
+  const marginStats = yStats.map(s => {
+    const rawVal = s.avgMargin * 100;
+    const isOutlier = s.year === '2022' && Math.abs(rawVal) > 50;
+    return {
+      year: s.year,
+      raw: rawVal,
+      display: isOutlier ? -10 : rawVal,
+      isOutlier
+    };
+  });
+  mc('chartFinMargin',{
+    type:'bar',
+    data:{
+      labels: yLabels,
+      datasets:[{
+        label:'마진율',
+        data: marginStats.map(m => m.display),
+        backgroundColor: marginStats.map((m, i) => yStats[i].year===cur.year ? (m.raw>=0?C.teal:C.red) : (m.raw>=0?'rgba(78,205,196,.45)':'rgba(248,113,113,.45)')),
+        borderColor: marginStats.map(m => m.raw>=0?C.teal:C.red),
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options:{
+      plugins:{
+        tooltip:{
+          callbacks:{
+            label: (ctx) => {
+              const item = marginStats[ctx.dataIndex];
+              if(item.isOutlier) return ` ${item.year}년 (1개월 참고): ${item.raw.toFixed(1)}% (차트축 조정 -10%)`;
+              return ` ${item.year}년 순수익률: ${item.raw>=0?'+':''}${item.raw.toFixed(1)}%`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555870',font:{size:9}}},
+        y:{
+          min: -12,
+          max: 8,
+          grid:{color:'rgba(255,255,255,.04)'},
+          ticks:{
+            color:'#555870',
+            font:{size:9},
+            callback: v => (v>=0?'+':'')+v.toFixed(0)+'%'
+          }
+        }
+      }
+    }
+  });
   const stageColors={neg:'rgba(248,113,113,.7)',improve:'rgba(251,191,36,.7)',black:'rgba(74,222,128,.7)'};
   const stageLabel={neg:'적자',improve:'개선',black:'흑자'};
   const getStage=m=>m>0?'black':m>-0.05?'improve':'neg';
